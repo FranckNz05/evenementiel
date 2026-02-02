@@ -12,7 +12,32 @@
                         <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
                     </div>
                     <h2 class="card-title mb-4">Paiement réussi !</h2>
-                    <p class="lead mb-4">Votre paiement a été traité avec succès.</p>
+                    
+                    <!-- Message Airtel -->
+                    @php
+                        $details = json_decode($payment->details ?? '{}', true) ?: [];
+                        $airtelMessage = $details['airtel_message'] ?? $details['callback_message'] ?? $details['verification_result']['message'] ?? null;
+                        $airtelTransactionStatus = $details['airtel_transaction_status'] ?? $details['callback_status'] ?? null;
+                    @endphp
+
+                    @if($airtelMessage)
+                        <div class="alert alert-success mb-4">
+                            <h6 class="alert-heading">
+                                <i class="bi bi-check-circle me-2"></i>
+                                Message de confirmation Airtel Money
+                            </h6>
+                            <p class="mb-0">
+                                <strong>{{ is_array($airtelMessage) ? ($airtelMessage['message'] ?? 'Transaction réussie') : $airtelMessage }}</strong>
+                            </p>
+                            @if($airtelTransactionStatus)
+                                <small class="text-muted d-block mt-2">
+                                    <strong>Statut transaction :</strong> {{ $airtelTransactionStatus }}
+                                </small>
+                            @endif
+                        </div>
+                    @else
+                        <p class="lead mb-4">Votre paiement a été traité avec succès.</p>
+                    @endif
 
                     <!-- Détails de la transaction -->
                     <div class="bg-light p-4 rounded mb-4">

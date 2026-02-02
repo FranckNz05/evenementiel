@@ -34,6 +34,38 @@
                         </div>
                     </div>
 
+                    <!-- Message d'erreur Airtel -->
+                    @php
+                        $details = json_decode($payment->details ?? '{}', true) ?: [];
+                        $airtelMessage = $details['airtel_message'] ?? $details['callback_message'] ?? $details['error_message'] ?? null;
+                        $airtelErrorCode = $details['airtel_error_code'] ?? $details['response_code'] ?? $details['error_code'] ?? null;
+                        $airtelResponse = $details['airtel_response'] ?? null;
+                    @endphp
+
+                    @if($airtelMessage || $airtelErrorCode)
+                        <div class="alert alert-danger mb-4">
+                            <h6 class="alert-heading">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                Message d'erreur Airtel Money
+                            </h6>
+                            @if($airtelMessage)
+                                <p class="mb-2">
+                                    <strong>{{ is_array($airtelMessage) ? ($airtelMessage['message'] ?? 'Erreur de paiement') : $airtelMessage }}</strong>
+                                </p>
+                            @endif
+                            @if($airtelErrorCode)
+                                <small class="text-muted d-block mb-2">
+                                    <strong>Code d'erreur :</strong> {{ $airtelErrorCode }}
+                                </small>
+                            @endif
+                            @if(isset($airtelResponse['status']['message']) && $airtelResponse['status']['message'] !== $airtelMessage)
+                                <p class="mb-0 small">
+                                    {{ $airtelResponse['status']['message'] }}
+                                </p>
+                            @endif
+                        </div>
+                    @endif
+
                     <!-- Message d'aide -->
                     <div class="alert alert-info mb-4">
                         <h6 class="alert-heading mb-3">Que faire maintenant ?</h6>

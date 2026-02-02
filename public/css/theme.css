@@ -1,0 +1,312 @@
+:root {
+	--color-bg: #f8fafc;
+	--color-surface: #ffffff;
+	--color-text: #1f2937;
+	--color-muted: #6b7280;
+    --color-primary: #0f1a3d;
+    --color-primary-2: #ef4444;
+	--color-accent: #ffffff;
+	--color-success: #10b981;
+	--color-danger: #ef4444;
+	--color-warning: #f59e0b;
+	--radius-sm: 6px;
+	--radius-md: 10px;
+	--radius-lg: 14px;
+	--shadow-sm: 0 1px 3px rgba(0,0,0,.08);
+	--shadow-md: 0 6px 18px rgba(0,0,0,.12);
+}
+
+body {
+	background: var(--color-bg);
+	color: var(--color-text);
+}
+
+/* Liens - soulignement rouge au survol (thème global) */
+a {
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-thickness: 2px;
+    text-decoration-color: var(--color-primary);
+}
+
+/* Désactiver le soulignement sur les icônes et dropdowns */
+.social-icon:hover,
+.dropdown-item:hover,
+.dropdown-item:focus,
+.navbar .nav-link:hover,
+.footer-contact .contact-item a:hover {
+    text-decoration: none !important;
+}
+
+/* Titres globaux en noir gras */
+h1, h2, h3, h4, h5, h6 {
+    color: #111111 !important;
+    font-weight: 800 !important;
+}
+
+/* Sous-titres et textes secondaires en gris */
+.section-subtitle, .subtitle, small, .text-muted {
+    color: #6b7280 !important;
+}
+
+/* Icônes en rouge par défaut */
+i.fas, i.far, i.fab, i.fa-solid, i.fa-regular, i.fa-brands {
+    color: var(--color-primary) !important;
+}
+
+/* Titres sur fond rouge: forcer en blanc dans les en-têtes de cartes */
+.card-header-custom h1,
+.card-header-custom h2,
+.card-header-custom h3,
+.card-header-custom h4,
+.card-header-custom h5,
+.card-header-custom h6,
+.card-header-custom .section-title,
+.page-header .section-title,
+.tickets-header h3 {
+    color: #ffffff !important;
+}
+
+/* Titre de la page d'accueil sur fond sombre */
+.hero-header h1,
+.hero-header .display-3 {
+    color: #ffffff !important;
+}
+
+/* Footer: tous les textes en blanc sur fond rouge */
+.footer-modern,
+.footer-modern *,
+.footer-modern h1,
+.footer-modern h2,
+.footer-modern h3,
+.footer-modern h4,
+.footer-modern h5,
+.footer-modern h6,
+.footer-modern p,
+.footer-modern span,
+.footer-modern div,
+.footer-modern li,
+.footer-modern a,
+.footer-modern .footer-links,
+.footer-modern .footer-brand,
+.footer-modern .footer-description,
+.footer-modern .footer-contact,
+.footer-modern .contact-item,
+.footer-modern .contact-item span {
+    color: #ffffff !important;
+}
+
+/* Icônes du footer en blanc/doré (selon le design) */
+.footer-modern .contact-item i {
+    color: var(--blanc-or, #ffffff) !important;
+}
+
+.footer-modern .social-icon {
+    background: #ffffff !important;
+    color: var(--color-primary, #0f1a3d) !important;
+    border-radius: 50% !important;
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    text-decoration: none !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+
+.footer-modern .social-icon:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.2);
+    color: var(--color-primary, #0f1a3d) !important;
+    text-decoration: none !important;
+}
+
+/* Boutons App Store / Play Store dans le footer */
+.footer-modern .app-btn {
+    background: #ffffff !important;
+    color: #111111 !important;
+    border: 1px solid rgba(0,0,0,0.05) !important;
+    border-radius: 10px !important;
+    text-decoration: none !important;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.footer-modern .app-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+    text-decoration: none !important;
+}
+
+/* Dashboard structural elements migrated from inline styles */
+#wrapper { display: flex; min-height: 100vh; position: relative; }
+#sidebar-wrapper {
+	width: 280px;
+	background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-primary-2) 100%);
+	backdrop-filter: blur(20px);
+	border-right: 1px solid rgba(255,255,255,0.1);
+	position: fixed; top: 0; left: 0; bottom: 0;
+	z-index: 1050; transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+	box-shadow: var(--shadow-md);
+	overflow-y: auto; overflow-x: hidden;
+}
+#page-content-wrapper { flex: 1; margin-left: 280px; min-height: 100vh; display: flex; flex-direction: column; position: relative; }
+@media (max-width: 1200px) { #page-content-wrapper { margin-left: 0; width: 100%; } }
+.topbar { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(0,0,0,0.05); box-shadow: var(--shadow-sm); height: 80px; display: flex; align-items: center; padding: 0 2rem; position: sticky; top: 0; z-index: 1040; }
+.main-content { padding: 2.25rem; flex: 1; }
+@media (max-width: 768px) { .main-content { padding: 1rem; } }
+
+.list-group-item { background: transparent; color: rgba(255,255,255,0.92); border: none; padding: 1.1rem 2.1rem; margin: 0.35rem 1.1rem; border-radius: var(--radius-md); transition: all 0.35s cubic-bezier(0.4,0,0.2,1); font-size: 1rem; font-weight: 500; }
+.list-group-item:hover { background: rgba(255,255,255,0.1); color: var(--color-accent); transform: translateX(8px); box-shadow: var(--shadow-sm); }
+.list-group-item.active { background: linear-gradient(135deg, var(--color-accent) 0%, #e6b800 100%); color: var(--color-primary); font-weight: 700; box-shadow: var(--shadow-md); transform: translateX(8px); }
+.user-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; margin-right: 12px; border: 3px solid var(--color-accent); }
+.page-title { font-size: 1.75rem; font-weight: 800; }
+
+/* Override pour le sidebar des filtres (direct-events) */
+.filters-card { 
+	background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-2) 100%) !important;
+	color: #fff !important;
+}
+.filters-card .card-body { color: #fff !important; }
+.filters-card .card-title,
+.filters-card .filter-header h6,
+.filters-card .filter-toggle { color: #fff !important; }
+.filters-card .filter-chip { 
+	background-color: rgba(255,255,255,0.1) !important; 
+	color: #fff !important; 
+	border-color: rgba(255,255,255,0.2) !important; 
+}
+.filters-card .filter-chip.active { 
+	background-color: var(--color-accent) !important; 
+	color: var(--color-primary) !important; 
+	border-color: var(--color-accent) !important; 
+}
+
+/* Override pour le sidebar des filtres (events.index, past, promotions) */
+.filter-card { 
+	background: #ffffff !important;
+	color: #000 !important;
+	border: 1px solid #e0e0e0 !important;
+}
+.filter-card .card-body { 
+	background: #ffffff !important; 
+	color: #000 !important; 
+}
+.filter-card .card-title,
+.filter-card .filter-header h6 { 
+	color: #000 !important; 
+}
+.filter-card .filter-header h6 i,
+.filter-card .card-title i {
+	color: var(--color-primary) !important;
+}
+.filter-card .filter-toggle { 
+	color: var(--color-primary) !important; 
+}
+.filter-card a { text-decoration: none !important; }
+.filter-card a:hover { text-decoration: none !important; }
+.filter-card .filter-chip { 
+    background-color: #f8f9fa !important; 
+    color: #000 !important; 
+    border: none !important; 
+    box-shadow: none !important; 
+}
+.filter-card .filter-chip.active { 
+	background-color: var(--color-accent) !important; 
+	color: var(--color-primary) !important; 
+	border-color: var(--color-accent) !important; 
+}
+.filter-card .filter-chip i { 
+	color: var(--color-primary) !important; 
+}
+.filter-card .filter-chip.active i { 
+	color: var(--color-primary) !important; 
+}
+.filter-card .btn-outline-primary { 
+	color: var(--color-primary) !important; 
+	border-color: var(--color-primary) !important; 
+	background-color: transparent !important; 
+}
+.filter-card .btn-outline-primary:hover { 
+	background-color: var(--color-primary) !important; 
+	color: #ffffff !important; 
+}
+
+.container-xxl, .container, .container-fluid {
+	scroll-margin-top: 80px;
+}
+
+/* Typography */
+.h1, .display-3, .display-4, .display-5 {
+	font-weight: 800;
+	letter-spacing: -.02em;
+}
+.text-muted { color: var(--color-muted) !important; }
+
+/* Buttons */
+.btn-primary, .btn.btn-primary {
+	background: var(--color-primary) !important;
+	border-color: var(--color-primary) !important;
+}
+.btn-primary:hover { background: var(--color-primary-2) !important; }
+.btn-outline-secondary { border-radius: 999px; }
+.btn, .modern-btn { border-radius: var(--radius-md) !important; }
+
+/* Cards & Surfaces */
+.card, .modern-card, .card.border-0 {
+	border: 1px solid #e5e7eb !important;
+	border-radius: var(--radius-lg) !important;
+	box-shadow: var(--shadow-sm) !important;
+	background: var(--color-surface) !important;
+}
+.card-header, .card-header-modern { background: var(--color-surface) !important; }
+
+/* Tables */
+.table thead th, .modern-table thead th {
+	background: #f3f4f6 !important;
+	border-bottom: 2px solid #e5e7eb !important;
+	font-weight: 700;
+	font-size: .85rem;
+}
+.table td, .table th, .modern-table td { vertical-align: middle; }
+
+/* Badges */
+.badge.bg-success, .modern-badge.badge-success { background: #d1fae5 !important; color: #065f46 !important; }
+.badge.bg-warning, .modern-badge.badge-warning { background: #fef3c7 !important; color: #92400e !important; }
+.badge.bg-danger, .modern-badge.badge-danger { background: #fee2e2 !important; color: #0f1a3d !important; }
+.badge.bg-secondary, .modern-badge.badge-secondary { background: #f3f4f6 !important; color: #374151 !important; }
+
+/* Forms */
+.form-control, .form-select {
+	border-radius: var(--radius-sm) !important;
+	border-color: #e5e7eb !important;
+}
+.form-control:focus, .form-select:focus {
+    box-shadow: 0 0 0 3px rgba(153,27,27,.12) !important;
+    border-color: var(--color-primary) !important;
+}
+
+/* Headers (page) */
+.page-header {
+	background: linear-gradient(135deg, var(--color-primary), var(--color-primary-2));
+	color: white;
+	border-radius: var(--radius-lg);
+	padding: 1.25rem 1.5rem;
+	box-shadow: var(--shadow-md);
+}
+.page-title { font-weight: 800; letter-spacing: -.01em; }
+
+/* Utilities */
+.shadow-md { box-shadow: var(--shadow-md) !important; }
+.rounded-pill { border-radius: 999px !important; }
+
+/* Unifier sections about/docs/payments */
+.section-header h1, .section-header .display-5 { font-weight: 800; }
+
+/* Navbar unifiée */
+.navbar { box-shadow: 0 4px 14px rgba(0,0,0,.12) !important; }
+.nav-link { font-weight: 600 !important; }

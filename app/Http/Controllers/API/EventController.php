@@ -70,14 +70,69 @@ class EventController extends Controller
         }
     }
 
-    public function show(Event $event)
+    public function show($eventId)
     {
-        $event->load(['category', 'user', 'tickets']);
+        try {
+            $event = Event::with(['category', 'user', 'tickets'])->findOrFail($eventId);
 
-        return response()->json([
-            'status' => true,
-            'data' => $event
-        ]);
+            return response()->json([
+                'status' => true,
+                'data' => $event
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Événement introuvable'
+            ], 404);
+        } catch (\Exception $e) {
+            Log::error('Error in EventController@show: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'Une erreur est survenue lors de la récupération de l\'événement'
+            ], 500);
+        }
+    }
+
+    /**
+     * Récupère les tickets d'un événement
+     */
+    public function tickets($eventId)
+    {
+        try {
+            $event = Event::with(['tickets'])->findOrFail($eventId);
+
+            $tickets = $event->tickets->map(function ($ticket) {
+                return [
+                    'id' => $ticket->id,
+                    'nom' => $ticket->nom,
+                    'prix' => (float) $ticket->prix,
+                    'quantite_totale' => (int) $ticket->quantite_totale,
+                    'quantite_vendue' => (int) $ticket->quantite_vendue,
+                    'quantite_disponible' => (int) ($ticket->quantite_totale - $ticket->quantite_vendue),
+                    'description' => $ticket->description,
+                    'date_debut_vente' => $ticket->date_debut_vente,
+                    'date_fin_vente' => $ticket->date_fin_vente,
+                ];
+            });
+
+            return response()->json([
+                'status' => true,
+                'event_id' => $event->id,
+                'event_title' => $event->title,
+                'tickets' => $tickets
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Événement introuvable'
+            ], 404);
+        } catch (\Exception $e) {
+            Log::error('Error in EventController@tickets: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'Une erreur est survenue lors de la récupération des tickets'
+            ], 500);
+        }
     }
 
     public function store(Request $request)

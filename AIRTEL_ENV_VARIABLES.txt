@@ -1,0 +1,33 @@
+# VARIABLES À AJOUTER DANS VOTRE FICHIER .env POUR AIRTEL MONEY
+# ===================================================================
+# Copiez-collez ces lignes dans votre fichier .env
+# ===================================================================
+
+# Configuration Airtel Money
+AIRTEL_CLIENT_ID=b280b215-8b00-4be4-bfbb-02f9b2a155c5
+AIRTEL_CLIENT_SECRET=c8ecb836-657e-429f-ae34-d4e646cde2f1
+
+# Configuration environnement
+AIRTEL_PRODUCTION=false
+AIRTEL_COUNTRY=CG
+AIRTEL_CURRENCY=XAF
+
+# Sécurité des callbacks (optionnel - activé par défaut)
+AIRTEL_CALLBACK_AUTH_ENABLED=true
+AIRTEL_CALLBACK_PRIVATE_KEY=
+
+# Signature des requêtes (optionnel - désactivé par défaut pour simplicité)
+AIRTEL_SIGNATURE_ENABLED=false
+# AIRTEL_SIGNATURE_KEY=
+# AIRTEL_SIGNATURE_IV=
+
+# Clé RSA pour le chiffrement (sera récupérée automatiquement via l'API)
+# AIRTEL_RSA_PUBLIC_KEY=
+
+# ===================================================================
+# INSTRUCTIONS :
+# 1. Ouvrez votre fichier .env dans un éditeur de texte
+# 2. Ajoutez ces variables à la fin du fichier
+# 3. Sauvegardez le fichier
+# 4. Redémarrez votre serveur Laravel si nécessaire
+# ===================================================================

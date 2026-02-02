@@ -32,6 +32,8 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 Route::get('/events', [EventController::class, 'index']);
 Route::get('/events/search', [EventController::class, 'search']);
 Route::get('/events/category/{category}', [EventController::class, 'byCategory']);
+// Route spécifique pour les tickets (doit être avant la route générique {event})
+Route::get('/events/{event}/tickets', [EventController::class, 'tickets'])->name('api.events.tickets');
 Route::get('/events/{event}', [EventController::class, 'show']);
 Route::get('/categories', [CategoryController::class, 'index']);
 

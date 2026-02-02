@@ -31,4 +31,13 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'airtel' => [
+        'client_id' => env('AIRTEL_CLIENT_ID'),
+        'client_secret' => env('AIRTEL_CLIENT_SECRET'),
+        'environment' => env('AIRTEL_ENVIRONMENT', 'sandbox'),
+        'country' => env('AIRTEL_COUNTRY', 'CG'),
+        'currency' => env('AIRTEL_CURRENCY', 'XAF'),
+        'rsa_public_key' => env('AIRTEL_RSA_PUBLIC_KEY'),
+    ],
+
 ];
