@@ -24,10 +24,10 @@
     @else
         @foreach($events as $event)
             <div class="modern-card">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">{{ $event->title }}</h6>
-                    <a href="{{ route('events.tickets.create', $event) }}" class="btn btn-sm btn-primary">
-                        <i class="fas fa-plus"></i> Ajouter un billet
+                <div class="card-header-modern py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="card-title text-white mb-0">{{ $event->title }}</h6>
+                    <a href="{{ route('events.tickets.create', $event) }}" class="btn btn-sm btn-light text-primary fw-bold">
+                        <i class="fas fa-plus"></i> Ajouter
                     </a>
                 </div>
                 <div class="card-body-modern">

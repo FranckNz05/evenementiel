@@ -1,11 +1,21 @@
-@extends('layouts.admin')
+@extends('layouts.dashboard')
+
+@section('title', 'Tableau de Bord Admin')
 
 @section('content')
 <div class="container-fluid px-4">
-    <h1 class="mt-4">Tableau de Bord Admin</h1>
-    <ol class="breadcrumb mb-4">
-        <li class="breadcrumb-item active">Administration</li>
-    </ol>
+    <!-- Page Header (Optional, if you want a second header below the topbar) -->
+    <!-- The layout already has a topbar with title. We can keep breadcrumbs here if desired or use page-header class -->
+    
+    <div class="row align-items-center mb-4">
+        <div class="col">
+            <h1 class="h3 mb-0 text-gray-800">Tableau de Bord</h1>
+            <ol class="breadcrumb mb-0 bg-transparent p-0">
+                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Administration</a></li>
+                <li class="breadcrumb-item active">Tableau de Bord</li>
+            </ol>
+        </div>
+    </div>
 
     <!-- Navigation Pills -->
     <ul class="nav nav-pills mb-4" id="adminTabs" role="tablist">
@@ -54,7 +64,7 @@
 
             <div class="row g-3 mb-4">
                 <div class="col-sm-6 col-lg-3">
-                    <div class="card h-100">
+                    <div class="card stat-card h-100">
                         <div class="card-body">
                             <div class="d-flex align-items-center">
                                 <div class="flex-shrink-0">
@@ -70,7 +80,7 @@
                 </div>
 
                 <div class="col-sm-6 col-lg-3">
-                    <div class="card h-100">
+                    <div class="card stat-card h-100">
                         <div class="card-body">
                             <div class="d-flex align-items-center">
                                 <div class="flex-shrink-0">
@@ -86,7 +96,7 @@
                 </div>
 
                 <div class="col-sm-6 col-lg-3">
-                    <div class="card h-100">
+                    <div class="card stat-card h-100">
                         <div class="card-body">
                             <div class="d-flex align-items-center">
                                 <div class="flex-shrink-0">
@@ -102,11 +112,11 @@
                 </div>
 
                 <div class="col-sm-6 col-lg-3">
-                    <div class="card h-100">
+                    <div class="card stat-card h-100">
                         <div class="card-body">
                             <div class="d-flex align-items-center">
                                 <div class="flex-shrink-0">
-                                <i class="fas fa-money-bill-wave fa-2x text-white"></i>
+                                <i class="fas fa-money-bill-wave fa-2x text-info"></i>
                                 </div>
                                 <div class="flex-grow-1 ms-3">
                                     <h6 class="card-subtitle mb-1">Revenus</h6>
@@ -142,47 +152,6 @@
     </div>
 </div>
 @endsection
-
-@push('styles')
-<style>
-.nav-pills .nav-link {
-    color: #6c757d;
-    background-color: transparent;
-    border: 1px solid #dee2e6;
-    margin-right: 0.5rem;
-}
-
-.nav-pills .nav-link.active {
-    color: #fff;
-    background-color: #0d6efd;
-    border-color: #0d6efd;
-}
-
-.nav-pills .nav-link:hover:not(.active) {
-    background-color: #f8f9fa;
-}
-
-.card {
-    box-shadow: 0 0.15rem 1.75rem 0 rgba(33, 40, 50, 0.15);
-}
-
-.card .card-header {
-    font-weight: 500;
-}
-
-.table > :not(caption) > * > * {
-    padding: 1rem 1rem;
-}
-
-.btn-group > .btn {
-    padding: 0.25rem 0.5rem;
-}
-
-.pagination {
-    margin-bottom: 0;
-}
-</style>
-@endpush
 
 @push('scripts')
 <script>

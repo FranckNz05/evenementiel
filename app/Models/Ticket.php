@@ -54,9 +54,34 @@ class Ticket extends Model
         return $this->hasMany(Reservation::class);
     }
 
+    public function orders()
+    {
+        return $this->belongsToMany(Order::class, 'orders_tickets', 'ticket_id', 'order_id')
+            ->withPivot('quantity', 'unit_price', 'total_amount')
+            ->withTimestamps();
+    }
+
+    public function paidOrders()
+    {
+        return $this->orders()
+            ->whereHas('payments', function ($query) {
+                $query->where('statut', 'payé');
+            });
+    }
+
+    /**
+     * Get the payments associated with the ticket (via OrderTicket)
+     */
     public function payments()
     {
-        return $this->hasMany(Payment::class);
+        return $this->hasManyThrough(
+            Payment::class,
+            OrderTicket::class,
+            'ticket_id',
+            'order_ticket_id',
+            'id',
+            'id'
+        );
     }
 
     // Helpers

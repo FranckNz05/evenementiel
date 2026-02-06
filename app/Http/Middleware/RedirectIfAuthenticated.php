@@ -13,6 +13,9 @@ class RedirectIfAuthenticated
     /**
      * Handle an incoming request.
      *
+     * Ce middleware redirige les utilisateurs déjà authentifiés
+     * loin des pages destinées aux invités (login, register, etc.)
+     *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
     public function handle(Request $request, Closure $next, string ...$guards): Response
@@ -21,10 +24,12 @@ class RedirectIfAuthenticated
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
+                // Utilisateur déjà authentifié, rediriger vers la page d'accueil
                 return redirect(RouteServiceProvider::HOME);
             }
         }
 
+        // Utilisateur non authentifié, laisser passer la requête
         return $next($request);
     }
 }

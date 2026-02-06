@@ -20,7 +20,19 @@ class NewPasswordController extends Controller
      */
     public function create(Request $request)
     {
-        return view('auth.passwords.reset', ['token' => $request->route('token'), 'email' => $request->email]);
+        $token = $request->route('token') ?? $request->query('token');
+        $email = $request->email ?? $request->query('email');
+        
+        \Log::info('Password reset form accessed', [
+            'token' => $token ? 'present' : 'missing',
+            'email' => $email,
+            'url' => $request->fullUrl(),
+        ]);
+        
+        return view('auth.passwords.reset', [
+            'token' => $token,
+            'email' => $email
+        ]);
     }
 
     /**

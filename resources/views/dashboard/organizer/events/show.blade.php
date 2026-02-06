@@ -19,9 +19,9 @@
     <div class="row">
         <div class="col-lg-8">
             <div class="modern-card">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">Détails de l'événement</h6>
-                    <span class="badge bg-{{ $event->is_published ? 'success' : 'warning' }}">
+                <div class="card-header-modern py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="card-title text-white mb-0">Détails de l'événement</h6>
+                    <span class="modern-badge badge-{{ $event->is_published ? 'success' : 'warning' }}">
                         {{ $event->is_published ? 'Publié' : 'Brouillon' }}
                     </span>
                 </div>

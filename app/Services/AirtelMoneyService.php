@@ -27,6 +27,11 @@ class AirtelMoneyService
     const CODE_PENDING_USER_CONFIRMATION = 'DP00800001006';
     const CODE_AMBIGUOUS = 'DP00800001000';
 
+    // Codes Disbursement (Série DP0090)
+    const CODE_SUCCESS_DISBURSEMENT = 'DP00900001001';
+    const CODE_PENDING_DISBURSEMENT = 'DP00900001006';
+    const CODE_AMBIGUOUS_DISBURSEMENT = 'DP00900001000';
+
     // Statuts officiels Airtel (selon documentation)
     const AIRTEL_STATUS_TS = 'TS'; // Transaction Success
     const AIRTEL_STATUS_TF = 'TF'; // Transaction Failed
@@ -53,6 +58,7 @@ class AirtelMoneyService
      * Codes d'erreur Airtel Money et leurs descriptions
      */
     protected $errorCodes = [
+        // --- CODES DE PAIEMENT / COLLECTION (DP0080...) ---
         'DP00800001000' => [
             'status' => 'ambiguous',
             'message' => 'Transaction en statut ambigu. Une vérification automatique est en cours pour déterminer le statut final.',
@@ -60,11 +66,6 @@ class AirtelMoneyService
             'requires_polling' => true,
         ],
         'DP00800001001' => [
-            'status' => 'success',
-            'message' => 'Transaction is successful.',
-            'retry' => false,
-        ],
-        'DP00900001001' => [
             'status' => 'success',
             'message' => 'Transaction is successful.',
             'retry' => false,
@@ -120,6 +121,86 @@ class AirtelMoneyService
             'message' => 'Transaction Not Found. The transaction was not found.',
             'retry' => false,
         ],
+
+        // --- CODES DE DISBURSEMENT (DP0090...) ---
+        'DP00900001000' => [ // Ambiguous
+            'status' => 'ambiguous',
+            'message' => 'The transaction is still processing and is in ambiguous state. Please do the transaction enquiry.',
+            'retry' => true,
+            'requires_polling' => true,
+        ],
+        'DP00900001001' => [ // Success
+            'status' => 'success',
+            'message' => 'Transaction is successful.',
+            'retry' => false,
+        ],
+        'DP00900001003' => [ // Limit reached
+            'status' => 'failed',
+            'message' => 'Maximum transaction limit reached for the day.',
+            'retry' => false,
+        ],
+        'DP00900001004' => [ // Invalid Amount
+            'status' => 'failed',
+            'message' => 'Amount entered is out of range with respect to defined limits.',
+            'retry' => false,
+        ],
+        'DP00900001005' => [ // Failed
+            'status' => 'failed',
+            'message' => 'Transaction failed or refused.',
+            'retry' => false,
+        ],
+        'DP00900001006' => [ // In progress
+            'status' => 'pending',
+            'message' => 'The transaction is still in progress. Please do the transaction enquiry.',
+            'retry' => true,
+            'requires_polling' => true,
+        ],
+        'DP00900001007' => [ // Insufficient Funds
+            'status' => 'failed',
+            'message' => 'Not enough funds in account to complete the transaction.',
+            'retry' => false,
+        ],
+        'DP00900001009' => [ // Invalid Initiatee
+            'status' => 'failed',
+            'message' => 'Initiatee of the transaction is invalid.',
+            'retry' => false,
+        ],
+        'DP00900001010' => [ // User Not Allowed
+            'status' => 'failed',
+            'message' => 'Payer is not an allowed user.',
+            'retry' => false,
+        ],
+        'DP00900001012' => [ // Invalid Mobile Number
+            'status' => 'failed',
+            'message' => 'Mobile number entered is incorrect',
+            'retry' => false,
+        ],
+        'DP00900001013' => [ // Transaction Refused
+            'status' => 'refused',
+            'message' => 'The transaction was refused.',
+            'retry' => false,
+        ],
+        'DP00900001015' => [ // Transaction not Found
+            'status' => 'not_found',
+            'message' => 'Transaction is not found',
+            'retry' => false,
+        ],
+        'DP00900001017' => [ // Duplicate Transaction Id
+            'status' => 'failed',
+            'message' => 'Duplicate Transaction Id.',
+            'retry' => false,
+        ],
+        'DP00900001018' => [ // Forbidden
+            'status' => 'failed',
+            'message' => 'Forbidden. X-signature and payload did not match.',
+            'retry' => true,
+        ],
+        'DP00900001019' => [ // Sender is Barred
+            'status' => 'failed',
+            'message' => 'Sender is Barred. Payer is Barred',
+            'retry' => false,
+        ],
+
         // Codes d'erreur pour l'API de chiffrement
         'DP02010001000' => [
             'status' => 'error',
@@ -172,7 +253,7 @@ class AirtelMoneyService
      */
     protected function isRealSuccess($responseCode)
     {
-        return $responseCode === self::CODE_SUCCESS;
+        return $responseCode === self::CODE_SUCCESS || $responseCode === self::CODE_SUCCESS_DISBURSEMENT;
     }
 
     /**
@@ -183,7 +264,7 @@ class AirtelMoneyService
      */
     protected function isPendingStatus($responseCode)
     {
-        return $responseCode === self::CODE_PENDING_USER_CONFIRMATION;
+        return $responseCode === self::CODE_PENDING_USER_CONFIRMATION || $responseCode === self::CODE_PENDING_DISBURSEMENT;
     }
 
     /**
@@ -194,7 +275,7 @@ class AirtelMoneyService
      */
     protected function isAmbiguousStatus($responseCode)
     {
-        return $responseCode === self::CODE_AMBIGUOUS;
+        return $responseCode === self::CODE_AMBIGUOUS || $responseCode === self::CODE_AMBIGUOUS_DISBURSEMENT;
     }
 
     /**
@@ -275,7 +356,10 @@ class AirtelMoneyService
                 'Authorization' => 'Bearer ' . $accessToken,
             ];
 
-            Log::info('Récupération des clés RSA de chiffrement Airtel');
+            Log::info('Récupération des clés RSA de chiffrement Airtel', [
+                'base_url' => $this->baseUrl,
+                'endpoint' => '/v1/rsa/encryption-keys'
+            ]);
 
             $response = $this->httpClient()->withHeaders($headers)
                 ->get($this->baseUrl . '/v1/rsa/encryption-keys');
@@ -286,19 +370,28 @@ class AirtelMoneyService
                 $errorCode = $responseData['status']['response_code'] ?? $responseData['status']['result_code'] ?? null;
                 $httpStatus = $response->status();
                 
-                Log::error('Erreur lors de la récupération des clés RSA', [
+                Log::error('Erreur lors de la récupération des clés RSA via API', [
                     'http_status' => $httpStatus,
                     'error_code' => $errorCode,
                     'response' => $responseData
                 ]);
 
+                // TENTATIVE DE FALLBACK SUR LA CLÉ CONFIGURÉE
+                $fallbackKey = env('AIRTEL_RSA_PUBLIC_KEY');
+                if ($fallbackKey) {
+                    Log::warning('Utilisation de la clé RSA de fallback configurée dans .env suite à l\'échec de l\'API');
+                    return [
+                        'key_id' => 'fallback',
+                        'key' => str_replace('\n', "\n", $fallbackKey), // Gérer les sauts de ligne si échappés
+                        'valid_upto' => now()->addYears(1)->toDateTimeString(), // Validité arbitraire
+                    ];
+                }
+
                 $errorMessage = $responseData['status']['message'] ?? 'Erreur lors de la récupération des clés de chiffrement';
                 
                 // Améliorer le message d'erreur selon le code HTTP
                 if ($httpStatus >= 500) {
-                    $errorMessage = 'Erreur serveur Airtel (HTTP ' . $httpStatus . '). ' . 
-                                   'L\'API Airtel est temporairement indisponible. ' .
-                                   'Veuillez configurer AIRTEL_RSA_PUBLIC_KEY dans votre fichier .env comme solution de secours.';
+                    $errorMessage = 'Erreur serveur Airtel (HTTP ' . $httpStatus . '). API indisponible.';
                 } elseif ($httpStatus === 401 || $httpStatus === 403) {
                     $errorMessage = 'Erreur d\'authentification Airtel (HTTP ' . $httpStatus . '). ' .
                                    'Vérifiez vos credentials AIRTEL_CLIENT_ID et AIRTEL_CLIENT_SECRET. ' .
@@ -309,7 +402,7 @@ class AirtelMoneyService
                                    'Configurez AIRTEL_RSA_PUBLIC_KEY dans votre fichier .env.';
                 }
 
-                throw new Exception($errorMessage);
+                throw new Exception($errorMessage . ' Aucune clé de fallback trouvée (configurez AIRTEL_RSA_PUBLIC_KEY).');
             }
 
             $isSuccess = $responseData['status']['success'] ?? false;
@@ -368,51 +461,44 @@ class AirtelMoneyService
                 }
             }
 
-            // Essayer d'utiliser phpseclib si disponible (SHA-256 conforme Airtel)
-            if (class_exists('\phpseclib3\Crypt\PublicKeyLoader')) {
-                try {
-                    $rsa = \phpseclib3\Crypt\PublicKeyLoader::load($publicKey)
-                        ->withHash('sha256')
-                        ->withMGFHash('sha256');
-                    
-                    $encrypted = $rsa->encrypt($data);
-                    
-                    Log::debug('Chiffrement RSA avec phpseclib (SHA-256 conforme Airtel)');
-                    
-                    return base64_encode($encrypted);
-                } catch (\Exception $e) {
-                    Log::warning('Erreur avec phpseclib, fallback sur OpenSSL', [
-                        'error' => $e->getMessage()
-                    ]);
-                    // Continuer avec OpenSSL en fallback
-                }
-            }
-
-            // Fallback: OpenSSL natif (SHA-1, peut fonctionner selon la configuration Airtel)
-            // ATTENTION: PHP OpenSSL utilise SHA-1 par défaut avec OAEP, pas SHA-256
-            // Cela peut fonctionner selon la configuration du serveur Airtel
-            $publicKeyResource = openssl_pkey_get_public($publicKey);
-            
-            if (!$publicKeyResource) {
-                $opensslError = openssl_error_string();
-                throw new Exception('Clé publique RSA invalide: ' . ($opensslError ?: 'Erreur OpenSSL inconnue'));
-            }
-
+            // METHODE 1 (PRIORITAIRE): OpenSSL natif (SHA-1)
+        // C'est la méthode utilisée dans l'exemple de code Airtel fourni (bien que la doc mentionne SHA-256 en théorie).
+        // En pratique, l'environnement UAT/Prod semble souvent attendre du SHA-1 (par défaut avec OPENSSL_PKCS1_OAEP_PADDING).
+        $publicKeyResource = openssl_pkey_get_public($publicKey);
+        
+        if ($publicKeyResource) {
             $encrypted = '';
-            $success = openssl_public_encrypt($data, $encrypted, $publicKeyResource, OPENSSL_PKCS1_OAEP_PADDING);
+            // MISE A JOUR: Utilisation de PKCS1_PADDING au lieu de OAEP selon l'exemple Node.js fourni qui fonctionne
+            // Node.js example: crypto.constants.RSA_PKCS1_PADDING
+            $success = openssl_public_encrypt($data, $encrypted, $publicKeyResource, OPENSSL_PKCS1_PADDING);
 
-            if (!$success) {
-                $error = openssl_error_string();
-                throw new Exception('Erreur lors du chiffrement RSA: ' . ($error ?: 'Erreur inconnue'));
+            if ($success) {
+                Log::debug('Chiffrement RSA réussi avec OpenSSL (PKCS1 Padding)');
+                return base64_encode($encrypted);
+            } else {
+                Log::warning('Échec OpenSSL natif, tentative avec phpseclib...', ['error' => openssl_error_string()]);
             }
+        }
 
-            // Avertissement si phpseclib n'est pas disponible
-            if (!class_exists('\phpseclib3\Crypt\PublicKeyLoader')) {
-                Log::warning('Chiffrement RSA avec OpenSSL (SHA-1). Pour SHA-256 conforme Airtel, installez: composer require phpseclib/phpseclib');
+        // METHODE 2 (FALLBACK): phpseclib (SHA-256)
+        // La documentation spécifie SHA-256, mais cela semble échouer (ROUTER116).
+        // On garde cette méthode en secours si OpenSSL échoue ou n'est pas dispo.
+        if (class_exists('\phpseclib3\Crypt\PublicKeyLoader')) {
+            try {
+                $rsa = \phpseclib3\Crypt\PublicKeyLoader::load($publicKey)
+                    ->withHash('sha256')
+                    ->withMGFHash('sha256');
+                
+                $encrypted = $rsa->encrypt($data);
+                
+                Log::debug('Chiffrement RSA réussi avec phpseclib (SHA-256)');
+                return base64_encode($encrypted);
+            } catch (\Exception $e) {
+                Log::error('Erreur avec phpseclib', ['error' => $e->getMessage()]);
             }
+        }
 
-            // Retourner en Base64
-            return base64_encode($encrypted);
+        throw new Exception('Impossible de chiffrer le PIN (OpenSSL et phpseclib ont échoué)');
 
         } catch (Exception $e) {
             Log::error('Erreur lors du chiffrement RSA', [
@@ -818,11 +904,11 @@ class AirtelMoneyService
     /**
      * Vérifie le statut d'une transaction de paiement (collection)
      * 
-     * Statuts possibles selon la documentation :
+     * Statuts Airtel possibles :
      * - TS: Transaction Success
-     * - TF: Transaction Failed
-     * - TA: Transaction Ambiguous
-     * - TIP: Transaction in Progress
+     * - TF: Transaction Failed  
+     * - TA: Transaction Ambiguous (nécessite polling)
+     * - TIP: Transaction in Progress (attente utilisateur)
      * - TE: Transaction Expired
      * 
      * @param string $transactionId ID de la transaction
@@ -838,247 +924,53 @@ class AirtelMoneyService
             }
 
             $headers = [
-                'Accept' => '*/* ',
+                'Accept' => '*/*',
                 'X-Country' => $this->country,
                 'X-Currency' => $this->currency,
                 'Authorization' => 'Bearer ' . $accessToken,
             ];
 
-            Log::info('Vérification statut paiement Airtel Money (collection)', [
+            Log::info('Vérification statut paiement Airtel Money', [
                 'transaction_id' => $transactionId
             ]);
 
             $response = $this->httpClient()->withHeaders($headers)
                 ->get($this->baseUrl . '/standard/v1/payments/' . $transactionId);
 
-            $responseData = $response->json();
-
+            // Gestion des erreurs HTTP
             if (!$response->successful()) {
-                $errorCode = $responseData['status']['response_code'] ?? $responseData['status']['result_code'] ?? null;
-                $errorInfo = $errorCode ? $this->getErrorInfo($errorCode) : null;
+                return $this->handleHttpError($response, $transactionId);
+            }
 
-                Log::error('Erreur lors de la vérification du paiement Airtel Money', [
-                    'http_status' => $response->status(),
+            $responseData = $response->json();
+            
+            // Validation de la réponse
+            if (!isset($responseData['data']['transaction'])) {
+                Log::error('Réponse API Airtel invalide - transaction manquante', [
                     'transaction_id' => $transactionId,
-                    'error_code' => $errorCode,
                     'response' => $responseData
                 ]);
-
-                return [
-                    'success' => false,
-                    'status' => $errorInfo['status'] ?? 'unknown',
-                    'transaction_status' => null, // Pas de statut disponible en cas d'erreur HTTP
-                    'message' => $errorInfo['message'] ?? $responseData['status']['message'] ?? 'Erreur lors de la vérification',
-                    'error_code' => $errorCode,
-                    'retry' => $errorInfo['retry'] ?? false,
-                ];
-            }
-
-            // Récupérer les données de transaction
-            $transactionData = $responseData['data']['transaction'] ?? [];
-            
-            // PRIORITÉ: Utiliser transaction.status (TS, TF, TA, TIP, TE) comme critère principal
-            // C'est plus fiable que response_code selon la documentation Airtel
-            $airtelStatus = $transactionData['status'] ?? null;
-            $errorCode = $responseData['status']['response_code'] ?? $responseData['status']['result_code'] ?? null;
-
-            // Mapper les statuts Airtel (TS, TF, TA, TIP, TE) vers nos statuts internes
-            if ($airtelStatus) {
-                switch ($airtelStatus) {
-                    case self::AIRTEL_STATUS_TS: // Transaction Success
-                        Log::info('Paiement Airtel Money vérifié - SUCCESS (TS)', [
-                            'transaction_id' => $transactionData['id'] ?? $transactionId,
-                            'airtel_money_id' => $transactionData['airtel_money_id'] ?? null,
-                            'transaction_status' => $airtelStatus,
-                        ]);
-
-                        return [
-                            'success' => true,
-                            'status' => self::STATUS_SUCCESS,
-                            'transaction_status' => $airtelStatus,
-                            'message' => $transactionData['message'] ?? 'Transaction réussie',
-                            'transaction_id' => $transactionData['id'] ?? $transactionId,
-                            'airtel_money_id' => $transactionData['airtel_money_id'] ?? null,
-                            'response_code' => $errorCode,
-                            'raw_response' => $responseData,
-                        ];
-
-                    case self::AIRTEL_STATUS_TF: // Transaction Failed
-                        Log::warning('Paiement Airtel Money vérifié - ÉCHEC (TF)', [
-                            'transaction_id' => $transactionData['id'] ?? $transactionId,
-                            'transaction_status' => $airtelStatus,
-                        ]);
-
-                        return [
-                            'success' => false,
-                            'status' => self::STATUS_FAILED,
-                            'transaction_status' => $airtelStatus,
-                            'message' => $transactionData['message'] ?? 'Transaction échouée',
-                            'transaction_id' => $transactionData['id'] ?? $transactionId,
-                            'airtel_money_id' => $transactionData['airtel_money_id'] ?? null,
-                            'response_code' => $errorCode,
-                            'error_code' => $errorCode,
-                            'raw_response' => $responseData,
-                        ];
-
-                    case self::AIRTEL_STATUS_TA: // Transaction Ambiguous
-                        Log::warning('Paiement Airtel Money vérifié - AMBIGUOUS (TA)', [
-                            'transaction_id' => $transactionData['id'] ?? $transactionId,
-                            'transaction_status' => $airtelStatus,
-                        ]);
-
-                        return [
-                            'success' => true, // IMPORTANT: success = true pour permettre le workflow
-                            'status' => self::STATUS_AMBIGUOUS,
-                            'transaction_status' => $airtelStatus,
-                            'message' => $transactionData['message'] ?? 'Transaction en statut ambigu',
-                            'transaction_id' => $transactionData['id'] ?? $transactionId,
-                            'airtel_money_id' => $transactionData['airtel_money_id'] ?? null,
-                            'response_code' => $errorCode,
-                            'requires_polling' => true,
-                            'raw_response' => $responseData,
-                        ];
-
-                    case self::AIRTEL_STATUS_TIP: // Transaction in Progress
-                        Log::info('Paiement Airtel Money vérifié - PENDING (TIP)', [
-                            'transaction_id' => $transactionData['id'] ?? $transactionId,
-                            'transaction_status' => $airtelStatus,
-                        ]);
-
-                        return [
-                            'success' => true, // IMPORTANT: success = true pour permettre le workflow
-                            'status' => self::STATUS_PENDING,
-                            'transaction_status' => $airtelStatus,
-                            'message' => $transactionData['message'] ?? 'Transaction en cours de traitement',
-                            'transaction_id' => $transactionData['id'] ?? $transactionId,
-                            'airtel_money_id' => $transactionData['airtel_money_id'] ?? null,
-                            'response_code' => $errorCode,
-                            'requires_user_action' => true,
-                            'raw_response' => $responseData,
-                        ];
-
-                    case self::AIRTEL_STATUS_TE: // Transaction Expired
-                        Log::warning('Paiement Airtel Money vérifié - EXPIRED (TE)', [
-                            'transaction_id' => $transactionData['id'] ?? $transactionId,
-                            'transaction_status' => $airtelStatus,
-                        ]);
-
-                        return [
-                            'success' => false,
-                            'status' => self::STATUS_EXPIRED,
-                            'transaction_status' => $airtelStatus,
-                            'message' => $transactionData['message'] ?? 'Transaction expirée',
-                            'transaction_id' => $transactionData['id'] ?? $transactionId,
-                            'airtel_money_id' => $transactionData['airtel_money_id'] ?? null,
-                            'response_code' => $errorCode,
-                            'raw_response' => $responseData,
-                        ];
-                }
-            }
-
-            // Fallback: Si pas de transaction.status, utiliser response_code
-            if ($errorCode) {
-                $errorInfo = $this->getErrorInfo($errorCode);
                 
-                // Vérifier si c'est un vrai succès (transaction complétée)
-                if ($this->isRealSuccess($errorCode)) {
-                    Log::info('Paiement Airtel Money vérifié - SUCCESS (via response_code)', [
-                        'transaction_id' => $transactionData['id'] ?? $transactionId,
-                        'airtel_money_id' => $transactionData['airtel_money_id'] ?? null,
-                        'response_code' => $errorCode,
-                    ]);
-
-                    return [
-                        'success' => true,
-                        'status' => self::STATUS_SUCCESS,
-                        'transaction_status' => $transactionData['status'] ?? 'TS',
-                        'message' => $transactionData['message'] ?? $errorInfo['message'],
-                        'transaction_id' => $transactionData['id'] ?? $transactionId,
-                        'airtel_money_id' => $transactionData['airtel_money_id'] ?? null,
-                        'response_code' => $errorCode,
-                        'raw_response' => $responseData,
-                    ];
-                }
-
-                // Vérifier si c'est un statut pending (nécessite confirmation utilisateur)
-                if ($this->isPendingStatus($errorCode)) {
-                    Log::info('Paiement Airtel Money vérifié - PENDING (via response_code)', [
-                        'transaction_id' => $transactionData['id'] ?? $transactionId,
-                        'airtel_money_id' => $transactionData['airtel_money_id'] ?? null,
-                        'response_code' => $errorCode,
-                    ]);
-
-                    return [
-                        'success' => true,
-                        'status' => self::STATUS_PENDING,
-                        'transaction_status' => $transactionData['status'] ?? 'TIP',
-                        'message' => $transactionData['message'] ?? $errorInfo['message'],
-                        'transaction_id' => $transactionData['id'] ?? $transactionId,
-                        'airtel_money_id' => $transactionData['airtel_money_id'] ?? null,
-                        'response_code' => $errorCode,
-                        'requires_user_action' => true,
-                        'raw_response' => $responseData,
-                    ];
-                }
-
-                // Vérifier si c'est un statut ambiguous (nécessite polling)
-                if ($this->isAmbiguousStatus($errorCode)) {
-                    Log::warning('Paiement Airtel Money vérifié - AMBIGUOUS (via response_code)', [
-                        'transaction_id' => $transactionData['id'] ?? $transactionId,
-                        'airtel_money_id' => $transactionData['airtel_money_id'] ?? null,
-                        'response_code' => $errorCode,
-                    ]);
-
-                    return [
-                        'success' => true,
-                        'status' => self::STATUS_AMBIGUOUS,
-                        'transaction_status' => $transactionData['status'] ?? 'TA',
-                        'message' => $transactionData['message'] ?? $errorInfo['message'],
-                        'transaction_id' => $transactionData['id'] ?? $transactionId,
-                        'airtel_money_id' => $transactionData['airtel_money_id'] ?? null,
-                        'response_code' => $errorCode,
-                        'requires_polling' => true,
-                        'raw_response' => $responseData,
-                    ];
-                }
-
-                // Autres statuts (vraies erreurs)
-                Log::warning('Paiement Airtel Money vérifié - ÉCHEC (via response_code)', [
-                    'transaction_id' => $transactionData['id'] ?? $transactionId,
-                    'response_code' => $errorCode,
-                    'error_info' => $errorInfo,
-                ]);
-
                 return [
                     'success' => false,
-                    'status' => $errorInfo['status'],
-                    'transaction_status' => $transactionData['status'] ?? 'TF',
-                    'message' => $transactionData['message'] ?? $errorInfo['message'],
-                    'transaction_id' => $transactionData['id'] ?? $transactionId,
-                    'airtel_money_id' => $transactionData['airtel_money_id'] ?? null,
-                    'response_code' => $errorCode,
-                    'error_code' => $errorCode,
-                    'retry' => $errorInfo['retry'],
+                    'status' => self::STATUS_ERROR,
+                    'message' => 'Réponse API invalide: données transaction manquantes',
+                    'transaction_id' => $transactionId,
                     'raw_response' => $responseData,
                 ];
             }
 
-            // Si pas de code d'erreur, c'est une erreur de configuration API
-            Log::error('Vérification statut paiement Airtel Money sans response_code', [
-                'transaction_id' => $transactionId,
-                'response' => $responseData,
-            ]);
-
-            return [
-                'success' => false,
-                'status' => self::STATUS_ERROR,
-                'transaction_status' => $transactionData['status'] ?? null, // Statut Airtel si disponible
-                'message' => 'Réponse API invalide: aucun code de réponse fourni',
-                'transaction_id' => $transactionData['id'] ?? $transactionId,
-                'airtel_money_id' => $transactionData['airtel_money_id'] ?? null,
-                'response_code' => null,
-                'raw_response' => $responseData,
-            ];
+            $transactionData = $responseData['data']['transaction'];
+            $airtelStatus = $transactionData['status'] ?? null;
+            $errorCode = $responseData['status']['response_code'] ?? $responseData['status']['result_code'] ?? null;
+            
+            // Si pas de statut Airtel, utiliser fallback sur response_code
+            if (!$airtelStatus && $errorCode) {
+                return $this->handleStatusByResponseCode($errorCode, $transactionData, $transactionId, $responseData);
+            }
+            
+            // Traitement par statut Airtel
+            return $this->handleAirtelStatus($airtelStatus, $transactionData, $transactionId, $errorCode, $responseData);
 
         } catch (Exception $e) {
             Log::error('Exception lors de la vérification du paiement Airtel Money', [
@@ -1090,10 +982,193 @@ class AirtelMoneyService
             return [
                 'success' => false,
                 'status' => 'error',
-                'transaction_status' => null, // Pas de statut disponible en cas d'exception
                 'message' => 'Erreur technique: ' . $e->getMessage(),
+                'transaction_id' => $transactionId,
             ];
         }
+    }
+
+    /**
+     * Gère les erreurs HTTP de l'API
+     */
+    private function handleHttpError($response, $transactionId)
+    {
+        $responseData = $response->json();
+        $errorCode = $responseData['status']['response_code'] ?? $responseData['status']['result_code'] ?? null;
+        $errorInfo = $errorCode ? $this->getErrorInfo($errorCode) : null;
+
+        Log::error('Erreur HTTP lors de la vérification du paiement Airtel Money', [
+            'http_status' => $response->status(),
+            'transaction_id' => $transactionId,
+            'error_code' => $errorCode,
+            'response' => $responseData
+        ]);
+
+        return [
+            'success' => false,
+            'status' => $errorInfo['status'] ?? self::STATUS_ERROR,
+            'transaction_status' => null,
+            'message' => $errorInfo['message'] ?? ($responseData['status']['message'] ?? 'Erreur lors de la vérification'),
+            'transaction_id' => $transactionId,
+            'error_code' => $errorCode,
+            'retry' => $errorInfo['retry'] ?? false,
+            'http_status' => $response->status(),
+        ];
+    }
+
+    /**
+     * Gère le statut basé sur le code de réponse
+     */
+    private function handleStatusByResponseCode($errorCode, $transactionData, $transactionId, $responseData)
+    {
+        $errorInfo = $this->getErrorInfo($errorCode);
+        
+        // Déterminer le statut interne basé sur le code d'erreur
+        if ($this->isRealSuccess($errorCode)) {
+            $status = self::STATUS_SUCCESS;
+            $success = true;
+        } elseif ($this->isPendingStatus($errorCode)) {
+            $status = self::STATUS_PENDING;
+            $success = true; // IMPORTANT: success = true pour permettre le workflow
+        } elseif ($this->isAmbiguousStatus($errorCode)) {
+            $status = self::STATUS_AMBIGUOUS;
+            $success = true; // IMPORTANT: success = true pour permettre le polling
+        } else {
+            $status = $errorInfo['status'] ?? self::STATUS_FAILED;
+            $success = false;
+        }
+
+        Log::info('Statut paiement déterminé par response_code', [
+            'transaction_id' => $transactionId,
+            'response_code' => $errorCode,
+            'status' => $status,
+            'success' => $success
+        ]);
+
+        return [
+            'success' => $success,
+            'status' => $status,
+            'transaction_status' => $this->mapResponseCodeToAirtelStatus($errorCode),
+            'message' => $transactionData['message'] ?? $errorInfo['message'],
+            'transaction_id' => $transactionData['id'] ?? $transactionId,
+            'airtel_money_id' => $transactionData['airtel_money_id'] ?? null,
+            'response_code' => $errorCode,
+            'requires_polling' => $status === self::STATUS_AMBIGUOUS,
+            'requires_user_action' => $status === self::STATUS_PENDING,
+            'retry' => $errorInfo['retry'] ?? false,
+            'raw_response' => $responseData,
+        ];
+    }
+
+    /**
+     * Gère le statut basé sur le code Airtel (TS, TF, TA, TIP, TE)
+     */
+    private function handleAirtelStatus($airtelStatus, $transactionData, $transactionId, $errorCode, $responseData)
+    {
+        $statusMap = [
+            self::AIRTEL_STATUS_TS => [
+                'success' => true,
+                'status' => self::STATUS_SUCCESS,
+                'log_level' => 'info',
+                'log_message' => 'Paiement Airtel Money vérifié - SUCCESS (TS)',
+            ],
+            self::AIRTEL_STATUS_TF => [
+                'success' => false,
+                'status' => self::STATUS_FAILED,
+                'log_level' => 'warning',
+                'log_message' => 'Paiement Airtel Money vérifié - ÉCHEC (TF)',
+            ],
+            self::AIRTEL_STATUS_TA => [
+                'success' => true, // IMPORTANT: pour permettre le polling
+                'status' => self::STATUS_AMBIGUOUS,
+                'log_level' => 'warning',
+                'log_message' => 'Paiement Airtel Money vérifié - AMBIGUOUS (TA)',
+                'requires_polling' => true,
+            ],
+            self::AIRTEL_STATUS_TIP => [
+                'success' => true, // IMPORTANT: pour permettre l'attente utilisateur
+                'status' => self::STATUS_PENDING,
+                'log_level' => 'info',
+                'log_message' => 'Paiement Airtel Money vérifié - PENDING (TIP)',
+                'requires_user_action' => true,
+            ],
+            self::AIRTEL_STATUS_TE => [
+                'success' => false,
+                'status' => self::STATUS_EXPIRED,
+                'log_level' => 'warning',
+                'log_message' => 'Paiement Airtel Money vérifié - EXPIRED (TE)',
+            ],
+        ];
+
+        if (!isset($statusMap[$airtelStatus])) {
+            Log::warning('Statut Airtel inconnu', [
+                'transaction_id' => $transactionId,
+                'airtel_status' => $airtelStatus,
+                'transaction_data' => $transactionData
+            ]);
+            
+            return [
+                'success' => false,
+                'status' => self::STATUS_ERROR,
+                'transaction_status' => $airtelStatus,
+                'message' => 'Statut transaction inconnu: ' . $airtelStatus,
+                'transaction_id' => $transactionData['id'] ?? $transactionId,
+                'airtel_money_id' => $transactionData['airtel_money_id'] ?? null,
+                'response_code' => $errorCode,
+                'raw_response' => $responseData,
+            ];
+        }
+
+        $config = $statusMap[$airtelStatus];
+        
+        // Log avec le niveau approprié
+        Log::{$config['log_level']}($config['log_message'], [
+            'transaction_id' => $transactionData['id'] ?? $transactionId,
+            'airtel_money_id' => $transactionData['airtel_money_id'] ?? null,
+            'transaction_status' => $airtelStatus,
+        ]);
+
+        return array_merge([
+            'transaction_status' => $airtelStatus,
+            'message' => $transactionData['message'] ?? $this->getDefaultMessage($airtelStatus),
+            'transaction_id' => $transactionData['id'] ?? $transactionId,
+            'airtel_money_id' => $transactionData['airtel_money_id'] ?? null,
+            'response_code' => $errorCode,
+            'raw_response' => $responseData,
+        ], $config);
+    }
+
+    /**
+     * Message par défaut selon le statut
+     */
+    private function getDefaultMessage($airtelStatus)
+    {
+        $messages = [
+            self::AIRTEL_STATUS_TS => 'Transaction réussie',
+            self::AIRTEL_STATUS_TF => 'Transaction échouée',
+            self::AIRTEL_STATUS_TA => 'Transaction en statut ambigu',
+            self::AIRTEL_STATUS_TIP => 'Transaction en cours de traitement',
+            self::AIRTEL_STATUS_TE => 'Transaction expirée',
+        ];
+        
+        return $messages[$airtelStatus] ?? 'Statut transaction inconnu';
+    }
+
+    /**
+     * Mappe un code de réponse vers un statut Airtel
+     */
+    private function mapResponseCodeToAirtelStatus($responseCode)
+    {
+        // Implémentez la logique de mapping spécifique
+        if ($this->isRealSuccess($responseCode)) {
+            return self::AIRTEL_STATUS_TS;
+        } elseif ($this->isPendingStatus($responseCode)) {
+            return self::AIRTEL_STATUS_TIP;
+        } elseif ($this->isAmbiguousStatus($responseCode)) {
+            return self::AIRTEL_STATUS_TA;
+        }
+        
+        return self::AIRTEL_STATUS_TF; // Par défaut, considérer comme échec
     }
 
     /**

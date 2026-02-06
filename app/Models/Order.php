@@ -70,6 +70,14 @@ class Order extends Model
         return $this->hasOne(Payment::class);
     }
 
+    /**
+     * Alias pour paiement() pour compatibilité avec AdminDashboardController
+     */
+    public function payments()
+    {
+        return $this->paiement();
+    }
+
     // Helpers
     public function isPending()
     {

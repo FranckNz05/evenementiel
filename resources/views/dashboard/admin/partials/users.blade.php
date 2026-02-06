@@ -1,29 +1,27 @@
-<div class="card">
-    <div class="card-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">
-                <i class="fas fa-users me-1"></i>
-                Gestion des Utilisateurs
-            </h5>
-            <div class="d-flex gap-2">
-                <div class="input-group">
-                    <input type="text" class="form-control" id="userSearch" placeholder="Rechercher...">
-                    <button class="btn btn-outline-secondary" type="button" id="searchBtn">
-                        <i class="fas fa-search"></i>
-                    </button>
-                </div>
-                <select class="form-select" id="userSort">
-                    <option value="">Trier par...</option>
-                    <option value="date">Date d'inscription</option>
-                    <option value="purchases">Achats</option>
-                    <option value="role">Rôle</option>
-                </select>
+<div class="modern-card">
+    <div class="card-header-modern">
+        <div class="card-title">
+            <i class="fas fa-users"></i>
+            Gestion des Utilisateurs
+        </div>
+        <div class="d-flex gap-2">
+            <div class="input-group">
+                <input type="text" class="form-control form-input-modern" id="userSearch" placeholder="Rechercher..." style="padding: 0.5rem 1rem;">
+                <button class="btn btn-primary" type="button" id="searchBtn">
+                    <i class="fas fa-search"></i>
+                </button>
             </div>
+            <select class="form-select form-select-modern" id="userSort" style="padding: 0.5rem 2rem 0.5rem 1rem;">
+                <option value="">Trier par...</option>
+                <option value="date">Date d'inscription</option>
+                <option value="purchases">Achats</option>
+                <option value="role">Rôle</option>
+            </select>
         </div>
     </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover">
+    <div class="card-body-modern p-4">
+        <div class="table-container">
+            <table class="modern-table">
                 <thead>
                     <tr>
                         <th>Nom</th>
@@ -39,23 +37,23 @@
                 </tbody>
             </table>
         </div>
-        <div id="usersPagination" class="d-flex justify-content-center mt-3">
+        <div id="usersPagination" class="pagination-container">
             <!-- Pagination loaded dynamically -->
         </div>
     </div>
 </div>
 
 <!-- Organizer Requests Section -->
-<div class="card mt-4">
-    <div class="card-header">
-        <h5 class="mb-0">
-            <i class="fas fa-user-plus me-1"></i>
+<div class="modern-card mt-4">
+    <div class="card-header-modern">
+        <div class="card-title">
+            <i class="fas fa-user-plus"></i>
             Demandes Organisateur
-        </h5>
+        </div>
     </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table">
+    <div class="card-body-modern p-4">
+        <div class="table-container">
+            <table class="modern-table">
                 <thead>
                     <tr>
                         <th>Utilisateur</th>
@@ -73,11 +71,11 @@
                             <td>{{ $request->created_at->format('d/m/Y H:i') }}</td>
                             <td>{{ Str::limit($request->motivation, 50) }}</td>
                             <td>
-                                <div class="btn-group" role="group">
-                                    <button type="button" class="btn btn-success btn-sm approve-request" data-id="{{ $request->id }}">
+                                <div class="btn-group-modern" role="group">
+                                    <button type="button" class="btn btn-success-modern btn-sm-modern approve-request" data-id="{{ $request->id }}">
                                         <i class="fas fa-check"></i>
                                     </button>
-                                    <button type="button" class="btn btn-danger btn-sm reject-request" data-id="{{ $request->id }}">
+                                    <button type="button" class="btn btn-danger-modern btn-sm-modern reject-request" data-id="{{ $request->id }}">
                                         <i class="fas fa-times"></i>
                                     </button>
                                 </div>
@@ -105,20 +103,20 @@ function loadUsers(page = 1, search = '', sort = '') {
         response.data.forEach(user => {
             $('#usersTableBody').append(`
                 <tr>
-                    <td>${user.name}</td>
+                    <td><div class="fw-bold text-dark">${user.name}</div></td>
                     <td>${user.email}</td>
-                    <td>${user.roles.map(role => role.name).join(', ')}</td>
+                    <td><span class="modern-badge badge-info">${user.roles.map(role => role.name).join(', ')}</span></td>
                     <td>${new Date(user.created_at).toLocaleDateString()}</td>
-                    <td>${user.total_purchases}</td>
+                    <td><div class="fw-bold">${user.total_purchases}</div></td>
                     <td>
-                        <div class="btn-group" role="group">
-                            <button class="btn btn-primary btn-sm view-user" data-id="${user.id}">
+                        <div class="btn-group-modern" role="group">
+                            <button class="btn btn-sm btn-info-modern view-user" data-id="${user.id}">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button class="btn btn-warning btn-sm edit-user" data-id="${user.id}">
+                            <button class="btn btn-sm btn-warning-modern edit-user" data-id="${user.id}">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn btn-danger btn-sm delete-user" data-id="${user.id}">
+                            <button class="btn btn-sm btn-danger-modern delete-user" data-id="${user.id}">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -137,12 +135,12 @@ function updatePagination(response) {
     pagination.empty();
 
     if (response.last_page > 1) {
-        let paginationHtml = '<ul class="pagination">';
+        let paginationHtml = '<ul class="pagination-modern">';
         
         // Previous page
         paginationHtml += `
             <li class="page-item ${response.current_page === 1 ? 'disabled' : ''}">
-                <a class="page-link" href="#" data-page="${response.current_page - 1}">Précédent</a>
+                <a class="page-link" href="#" data-page="${response.current_page - 1}"><i class="fas fa-chevron-left me-1"></i> Précédent</a>
             </li>
         `;
 
@@ -158,7 +156,7 @@ function updatePagination(response) {
         // Next page
         paginationHtml += `
             <li class="page-item ${response.current_page === response.last_page ? 'disabled' : ''}">
-                <a class="page-link" href="#" data-page="${response.current_page + 1}">Suivant</a>
+                <a class="page-link" href="#" data-page="${response.current_page + 1}">Suivant <i class="fas fa-chevron-right ms-1"></i></a>
             </li>
         `;
 
