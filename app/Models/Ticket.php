@@ -9,8 +9,6 @@ class Ticket extends Model
 {
     use HasFactory;
 
-    const UPDATED_AT = 'update_at';
-
     protected $table = 'tickets';
 
     protected $fillable = [
@@ -38,9 +36,7 @@ class Ticket extends Model
 
     protected $dates = [
         'promotion_start',
-        'promotion_end',
-        'create_at',
-        'update_at'
+        'promotion_end'
     ];
 
     // Relations

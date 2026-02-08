@@ -350,11 +350,12 @@ class AirtelMoneyService
             }
 
             $headers = [
-                'Accept' => '*/* ',
+                'Accept' => 'application/json',
                 'X-Country' => $this->country,
                 'X-Currency' => $this->currency,
                 'Authorization' => 'Bearer ' . $accessToken,
             ];
+
 
             Log::info('Récupération des clés RSA de chiffrement Airtel', [
                 'base_url' => $this->baseUrl,
@@ -373,8 +374,10 @@ class AirtelMoneyService
                 Log::error('Erreur lors de la récupération des clés RSA via API', [
                     'http_status' => $httpStatus,
                     'error_code' => $errorCode,
-                    'response' => $responseData
+                    'response' => $responseData,
+                    'headers' => $headers
                 ]);
+
 
                 // TENTATIVE DE FALLBACK SUR LA CLÉ CONFIGURÉE
                 $fallbackKey = env('AIRTEL_RSA_PUBLIC_KEY');
@@ -438,13 +441,10 @@ class AirtelMoneyService
 
     /**
      * Chiffre des données avec RSA (pour le PIN)
-     * Utilise RSA/ECB/OAEPWithSHA-256AndMGF1Padding avec KeyLength 2048
-     * 
-     * IMPORTANT: Pour un chiffrement conforme à Airtel (SHA-256), installez phpseclib:
-     * composer require phpseclib/phpseclib
+     * Utilise RSA avec OAEP padding et SHA-256 (requis par Airtel)
      * 
      * @param string $data Données à chiffrer
-     * @param string|null $publicKey Clé publique RSA (optionnelle, récupérée automatiquement si non fournie)
+     * @param string|null $publicKey Clé publique RSA
      * @return string Données chiffrées en Base64
      * @throws Exception Si le chiffrement échoue
      */
@@ -461,44 +461,61 @@ class AirtelMoneyService
                 }
             }
 
-            // METHODE 1 (PRIORITAIRE): OpenSSL natif (SHA-1)
-        // C'est la méthode utilisée dans l'exemple de code Airtel fourni (bien que la doc mentionne SHA-256 en théorie).
-        // En pratique, l'environnement UAT/Prod semble souvent attendre du SHA-1 (par défaut avec OPENSSL_PKCS1_OAEP_PADDING).
-        $publicKeyResource = openssl_pkey_get_public($publicKey);
-        
-        if ($publicKeyResource) {
+            // Normaliser la clé (enlever les espaces inutiles)
+            $publicKey = trim($publicKey);
+
+            // Utiliser phpseclib pour un support complet de OAEP
+            if (class_exists('\phpseclib3\Crypt\PublicKeyLoader')) {
+                try {
+                    // Airtel peut nécessiter SHA-256 (recommandé) ou SHA-1 (standard historique)
+                    // La plupart des implémentations attendent MGF1 avec SHA-1 même pour un hash SHA-256
+                    $hash = config('services.airtel.oaep_hash', 'sha256');
+                    $mgfHash = config('services.airtel.oaep_mgf', 'sha1');
+
+                    Log::debug("Chiffrement RSA avec phpseclib: Hash=$hash, MGF=$mgfHash");
+
+                    $rsa = \phpseclib3\Crypt\PublicKeyLoader::load($publicKey)
+                        ->withPadding(\phpseclib3\Crypt\RSA::ENCRYPTION_OAEP)
+                        ->withHash($hash)
+                        ->withMGFHash($mgfHash);
+                    
+                    $encrypted = $rsa->encrypt($data);
+                    
+                    Log::debug("Chiffrement RSA réussi avec phpseclib ($hash / MGF1-$mgfHash)");
+                    return base64_encode($encrypted);
+                } catch (Exception $e) {
+                    Log::warning('Échec SHA-256 OAEP, tentative avec SHA-1 OAEP...', ['error' => $e->getMessage()]);
+                    
+                    try {
+                        $rsa = \phpseclib3\Crypt\PublicKeyLoader::load($publicKey)
+                            ->withPadding(\phpseclib3\Crypt\RSA::ENCRYPTION_OAEP)
+                            ->withHash('sha1')
+                            ->withMGFHash('sha1');
+                        
+                        $encrypted = $rsa->encrypt($data);
+                        Log::debug('Chiffrement RSA réussi avec phpseclib (OAEP SHA-1)');
+                        return base64_encode($encrypted);
+                    } catch (Exception $e2) {
+                        Log::error('Échec total phpseclib', ['error' => $e2->getMessage()]);
+                    }
+                }
+            }
+
+            // Fallback sur OpenSSL natif (SHA-1 OAEP par défaut en PHP)
+            $publicKeyResource = openssl_pkey_get_public($publicKey);
+            if (!$publicKeyResource) {
+                throw new Exception('Clé publique RSA invalide: ' . openssl_error_string());
+            }
+
             $encrypted = '';
-            // MISE A JOUR: Utilisation de PKCS1_PADDING au lieu de OAEP selon l'exemple Node.js fourni qui fonctionne
-            // Node.js example: crypto.constants.RSA_PKCS1_PADDING
-            $success = openssl_public_encrypt($data, $encrypted, $publicKeyResource, OPENSSL_PKCS1_PADDING);
+            $success = openssl_public_encrypt($data, $encrypted, $publicKeyResource, OPENSSL_PKCS1_OAEP_PADDING);
 
-            if ($success) {
-                Log::debug('Chiffrement RSA réussi avec OpenSSL (PKCS1 Padding)');
-                return base64_encode($encrypted);
-            } else {
-                Log::warning('Échec OpenSSL natif, tentative avec phpseclib...', ['error' => openssl_error_string()]);
+            if (!$success) {
+                throw new Exception('Échec du chiffrement RSA (OpenSSL): ' . openssl_error_string());
             }
-        }
 
-        // METHODE 2 (FALLBACK): phpseclib (SHA-256)
-        // La documentation spécifie SHA-256, mais cela semble échouer (ROUTER116).
-        // On garde cette méthode en secours si OpenSSL échoue ou n'est pas dispo.
-        if (class_exists('\phpseclib3\Crypt\PublicKeyLoader')) {
-            try {
-                $rsa = \phpseclib3\Crypt\PublicKeyLoader::load($publicKey)
-                    ->withHash('sha256')
-                    ->withMGFHash('sha256');
-                
-                $encrypted = $rsa->encrypt($data);
-                
-                Log::debug('Chiffrement RSA réussi avec phpseclib (SHA-256)');
-                return base64_encode($encrypted);
-            } catch (\Exception $e) {
-                Log::error('Erreur avec phpseclib', ['error' => $e->getMessage()]);
-            }
-        }
-
-        throw new Exception('Impossible de chiffrer le PIN (OpenSSL et phpseclib ont échoué)');
+            Log::debug('Chiffrement RSA réussi avec OpenSSL (OAEP Padding)');
+            return base64_encode($encrypted);
 
         } catch (Exception $e) {
             Log::error('Erreur lors du chiffrement RSA', [
@@ -508,6 +525,9 @@ class AirtelMoneyService
             throw $e;
         }
     }
+
+
+
 
     /**
      * Génère une signature de message pour les requêtes (si activée)
@@ -1263,17 +1283,31 @@ class AirtelMoneyService
             // Chiffrer le PIN
             $encryptedPin = $this->encryptPin($data['pin']);
 
+            Log::debug('PIN chiffré généré', [
+                'encrypted_length' => strlen($encryptedPin),
+                'first_10_chars' => substr($encryptedPin, 0, 10) . '...'
+            ]);
+
+
+            // Nettoyer les références pour qu'elles soient strictement alphanumériques (erreur DP00900001013)
+            $reference = preg_replace('/[^a-zA-Z0-9]/', '', $data['reference'] ?? Str::random(16));
+            $transactionId = preg_replace('/[^a-zA-Z0-9]/', '', $data['transaction_id'] ?? Str::uuid()->toString());
+
+            // Limiter à 64 caractères selon la doc
+            $reference = substr($reference, 0, 64);
+            $transactionId = substr($transactionId, 0, 64);
+
             // Préparer le payload selon la documentation Disbursement-APIs v3.0
             $payload = [
                 'payee' => [
                     'msisdn' => $msisdn,
                     'wallet_type' => $data['wallet_type'] ?? 'MOBILE_MONEY',
                 ],
-                'reference' => $data['reference'] ?? Str::random(16),
+                'reference' => $reference,
                 'pin' => $encryptedPin,
                 'transaction' => [
                     'amount' => $data['amount'],
-                    'id' => $data['transaction_id'] ?? Str::uuid()->toString(),
+                    'id' => $transactionId,
                     'type' => $data['transaction_type'] ?? 'B2B',
                 ],
             ];
@@ -1430,6 +1464,37 @@ class AirtelMoneyService
                 'success' => false,
                 'status' => 'error',
                 'message' => 'Erreur technique: ' . $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Teste le chiffrement RSA indépendamment
+     * 
+     * @param string $pin PIN à tester
+     * @return array Résultats du test
+     */
+    public function testEncryption($pin = '1234')
+    {
+        try {
+            // Récupérer la clé
+            $keys = $this->getEncryptionKeys();
+            $publicKey = $keys['key'];
+            
+            // Tester le chiffrement
+            $encrypted = $this->encryptWithRSA($pin, $publicKey);
+            
+            return [
+                'success' => true,
+                'key_id' => $keys['key_id'] ?? null,
+                'encrypted_pin' => $encrypted,
+                'encrypted_length' => strlen($encrypted),
+                'key_expiry' => $keys['valid_upto'] ?? null
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
             ];
         }
     }

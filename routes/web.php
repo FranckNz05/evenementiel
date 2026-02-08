@@ -1,20 +1,17 @@
 <?php
-
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
-
-
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Organizer\DashboardController;
 use App\Http\Controllers\Organizer\ScanController;
-use App\Http\Controllers\Organizer\AccessCodeController;
-use App\Http\Controllers\Organizer\OrganizerProfileController;
+use App\Http\Controllers\AccessCodeController;
+use App\Http\Controllers\OrganizerProfileController;
 use App\Http\Controllers\Organizer\AnalyticsController;
 use App\Http\Controllers\Organizer\TicketController;
-use App\Http\Controllers\Organizer\StatsController;
+// use App\Http\Controllers\Organizer\StatsController;
 use App\Http\Controllers\Organizer\OrganizerDashboardController;
 use App\Http\Controllers\Organizer\PaymentController as OrganizerPaymentController;
 use App\Http\Controllers\PaymentController;
@@ -219,11 +216,15 @@ Route::middleware('guest')->group(function () {
     // Login Routes
     Route::get('login', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'create'])
         ->name('login');
+    Route::get('auth/login', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'create'])
+        ->name('auth.login');
     Route::post('login', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'store']);
 
     // Registration Routes
     Route::get('register', [App\Http\Controllers\Auth\RegisteredUserController::class, 'create'])
         ->name('register');
+    Route::get('register-auth', [App\Http\Controllers\Auth\RegisteredUserController::class, 'create'])
+        ->name('auth.register');
     Route::post('register', [App\Http\Controllers\Auth\RegisteredUserController::class, 'store']);
 
     // Social Authentication Routes
@@ -822,18 +823,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('tickets.check-ready');
 });
 
-// Route webhook (sans middleware auth)
-Route::post('/webhooks/yabetoo', [YabetooWebhookController::class, 'handleWebhook'])
-    ->name('webhook.yabetoo');
+// Route webhook (sans middleware auth) - COMMENTÉ: YabetooWebhookController n'existe pas
+// Route::post('/webhooks/yabetoo', [YabetooWebhookController::class, 'handleWebhook'])
+//    ->name('webhook.yabetoo');
 
 // Route callback Airtel Money (sans middleware auth)
 Route::post('/webhooks/airtel/callback', [App\Http\Controllers\AirtelCallbackController::class, 'handleCallback'])
     ->name('webhook.airtel.callback');
 
-Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [LoginController::class, 'login']);
-
-Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // FAQ - Route supprimée car définie plus bas
 
@@ -1280,12 +1277,12 @@ Route::middleware(['auth', 'verified', 'organizer'])->prefix('organizer')->name(
         return redirect()->route('organizer.analytics.index');
     })->name('statistics.index');
     
-    // Statistiques détaillées
-    Route::prefix('stats')->name('stats.')->group(function () {
-        Route::get('/', [StatsController::class, 'index'])->name('index');
-        Route::get('/events', [StatsController::class, 'events'])->name('events');
-        Route::get('/tickets', [StatsController::class, 'tickets'])->name('tickets');
-    });
+    // Statistiques détaillées - COMMENTÉ: StatsController n'existe pas
+    // Route::prefix('stats')->name('stats.')->group(function () {
+    //     Route::get('/', [StatsController::class, 'index'])->name('index');
+    //     Route::get('/events', [StatsController::class, 'events'])->name('events');
+    //     // Route::get('/tickets', [StatsController::class, 'tickets'])->name('tickets');
+    // });
     
     // Retraits (Withdrawals)
     Route::get('withdrawals', [App\Http\Controllers\Organizer\WithdrawalController::class, 'index'])->name('withdrawals.index');
@@ -1314,6 +1311,14 @@ Route::middleware(['auth'])->group(function () {
 // Routes de prévisualisation du design des billets (développement)
 Route::get('/ticket/design/preview', [App\Http\Controllers\TicketDesignController::class, 'preview'])->name('ticket.design.preview');
 Route::get('/ticket/design/pdf', [App\Http\Controllers\TicketDesignController::class, 'downloadPreview'])->name('ticket.design.pdf');
+
+// Routes pour la gestion des casiers de boissons
+Route::prefix('stock')->name('stock.')->group(function () {
+    Route::get('/casiers', [App\Http\Controllers\StockCasiersController::class, 'index'])->name('casiers.index');
+    Route::post('/casiers', [App\Http\Controllers\StockCasiersController::class, 'store'])->name('casiers.store');
+    Route::get('/casiers/print', [App\Http\Controllers\StockCasiersController::class, 'print'])->name('casiers.print');
+    Route::delete('/casiers/{product}', [App\Http\Controllers\StockCasiersController::class, 'destroy'])->name('casiers.destroy');
+});
 
 // Routes de débogage (développement)
 Route::get('/debug/event-images', [App\Http\Controllers\DebugController::class, 'checkEventImages']);

@@ -38,6 +38,20 @@ return [
         'country' => env('AIRTEL_COUNTRY', 'CG'),
         'currency' => env('AIRTEL_CURRENCY', 'XAF'),
         'rsa_public_key' => env('AIRTEL_RSA_PUBLIC_KEY'),
+        'oaep_hash' => env('AIRTEL_OAEP_HASH', 'sha256'),
+        'oaep_mgf' => env('AIRTEL_OAEP_MGF', 'sha1'),
+    ],
+
+    'facebook' => [
+        'client_id' => env('FACEBOOK_CLIENT_ID'),
+        'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
+        'redirect' => env('FACEBOOK_REDIRECT_URI'),
+    ],
+
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
 ];

@@ -51,4 +51,20 @@ class Reservation extends Model
     {
         return $this->status === 'annulé';
     }
+
+    /**
+     * Get the formatted reference number for this reservation.
+     */
+    public function getReferenceNumberAttribute()
+    {
+        return 'RES-' . str_pad($this->id, 8, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Get the total amount for this reservation.
+     */
+    public function getTotalAmountAttribute()
+    {
+        return $this->ticket->prix * $this->quantity;
+    }
 }

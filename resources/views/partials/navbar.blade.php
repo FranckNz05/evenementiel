@@ -1,14 +1,14 @@
 <!-- Navbar Start -->
-<nav class="navbar navbar-expand-lg fixed-top bg-white shadow-sm">
+<nav class="navbar navbar-expand-lg fixed-top navbar-dark bg-premium shadow-sm">
     <div class="container">
         <!-- Logo -->
         <a class="navbar-brand d-flex align-items-center" href="{{ route('home') }}">
-            <span class="text-primary fw-bold">Mokili</span><span class="text-danger fw-bold">Event</span>
+            <span class="text-white fw-bold">Mokili</span><span class="text-danger fw-bold">Event</span>
         </a>
 
         <!-- Bouton pour mobile -->
         <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <i class="fas fa-bars"></i>
+            <i class="fas fa-bars text-white"></i>
         </button>
 
         <!-- Navigation -->
@@ -46,8 +46,8 @@
             <div class="d-flex gap-2">
                 @auth
                     <div class="dropdown">
-                        <button class="btn btn-light dropdown-toggle" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user-circle me-1"></i> {{ Auth::user()->name }}
+                        <button class="btn btn-premium-light dropdown-toggle text-white" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle me-1 text-white"></i> {{ Auth::user()->name }}
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="userMenu">
                             <li><a class="dropdown-item" href="{{ route('profile.edit') }}"><i class="fas fa-user me-2"></i> Mon profil</a></li>
@@ -67,10 +67,10 @@
                         </ul>
                     </div>
                 @else
-                    <a href="{{ route('auth.login') }}" class="btn btn-outline-primary">
+                    <a href="{{ route('auth.login') }}" class="btn btn-outline-light rounded-pill px-4">
                         <i class="fas fa-sign-in-alt me-1"></i> Connexion
                     </a>
-                    <a href="{{ route('auth.register') }}" class="btn btn-primary">
+                    <a href="{{ route('auth.register') }}" class="btn btn-danger rounded-pill px-4">
                         <i class="fas fa-user-plus me-1"></i> Inscription
                     </a>
                 @endauth
@@ -86,9 +86,15 @@
     transition: all 0.3s ease;
 }
 
+.bg-premium {
+    background: linear-gradient(135deg, #0f1a3d 0%, #1a2a5a 100%);
+    backdrop-filter: blur(10px);
+}
+
 .navbar.scrolled {
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
+    background: rgba(15, 26, 61, 0.95);
 }
 
 .navbar-brand {
@@ -98,32 +104,49 @@
 
 .nav-link {
     font-weight: 500;
-    transition: color 0.3s ease;
+    color: rgba(255, 255, 255, 0.8) !important;
+    transition: all 0.3s ease;
+}
+
+.nav-link i {
+    color: white !important;
 }
 
 .nav-link:hover {
-    color: var(--bs-primary);
+    color: white !important;
+    transform: translateY(-1px);
 }
 
 .nav-link.active {
-    color: var(--bs-primary) !important;
+    color: white !important;
     position: relative;
 }
 
 .nav-link.active::after {
     content: '';
     position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 24px;
+    bottom: -5px;
+    left: 1rem;
+    right: 1rem;
     height: 2px;
-    background-color: var(--bs-primary);
+    background-color: var(--bs-danger);
     border-radius: 2px;
+}
+
+.btn-premium-light {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.btn-premium-light:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
 .dropdown-menu {
     border-radius: 0.5rem;
+    margin-top: 0.5rem !important;
 }
 
 .dropdown-item {
@@ -132,7 +155,7 @@
 }
 
 .dropdown-item:hover {
-    background-color: var(--bs-light);
+    background-color: #f8f9fa;
 }
 
 .dropdown-item i {
