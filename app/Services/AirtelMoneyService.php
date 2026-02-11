@@ -1141,16 +1141,21 @@ class AirtelMoneyService
 
         $config = $statusMap[$airtelStatus];
         
-        // Log avec le niveau approprié
+        // Récupérer le message d'Airtel
+        $airtelMessage = $transactionData['message'] ?? $this->getDefaultMessage($airtelStatus);
+        
+        // Log avec le niveau approprié et le message
         Log::{$config['log_level']}($config['log_message'], [
             'transaction_id' => $transactionData['id'] ?? $transactionId,
             'airtel_money_id' => $transactionData['airtel_money_id'] ?? null,
             'transaction_status' => $airtelStatus,
+            'message' => $airtelMessage, // Ajouter le message dans les logs
+            'response_code' => $errorCode,
         ]);
 
         return array_merge([
             'transaction_status' => $airtelStatus,
-            'message' => $transactionData['message'] ?? $this->getDefaultMessage($airtelStatus),
+            'message' => $airtelMessage,
             'transaction_id' => $transactionData['id'] ?? $transactionId,
             'airtel_money_id' => $transactionData['airtel_money_id'] ?? null,
             'response_code' => $errorCode,

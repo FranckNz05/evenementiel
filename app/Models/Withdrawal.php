@@ -28,7 +28,9 @@ class Withdrawal extends Model
     protected $casts = [
         'amount' => 'decimal:2',
         'processed_at' => 'datetime',
+        'details' => 'array',
     ];
+
 
     /**
      * Relation avec l'organisateur

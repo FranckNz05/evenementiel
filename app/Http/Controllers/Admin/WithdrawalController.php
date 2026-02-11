@@ -163,12 +163,13 @@ class WithdrawalController extends Controller
                         'transaction_id' => $result['transaction_id'] ?? null,
                         'airtel_money_id' => $result['airtel_money_id'] ?? null,
                         'reference_id' => $result['reference_id'] ?? null,
-                        'details' => json_encode([
+                        'details' => [
                             'airtel_response' => $result,
                             'processed_by' => auth()->user()->name,
                             'processed_at' => now()->toISOString(),
-                        ]),
+                        ],
                     ]);
+
 
                     DB::commit();
 
@@ -208,12 +209,13 @@ class WithdrawalController extends Controller
                     $withdrawal->update([
                         'status' => 'rejected',
                         'rejection_reason' => $result['message'] ?? 'Erreur lors du traitement Airtel Money',
-                        'details' => json_encode([
+                        'details' => [
                             'airtel_response' => $result,
                             'processed_by' => auth()->user()->name,
                             'error_at' => now()->toISOString(),
-                        ]),
+                        ],
                     ]);
+
 
                     DB::commit();
 
@@ -233,12 +235,13 @@ class WithdrawalController extends Controller
                 // Pour MTN ou autres méthodes (simulation)
                 $withdrawal->update([
                     'status' => 'completed',
-                    'details' => json_encode([
+                    'details' => [
                         'processed_by' => auth()->user()->name,
                         'processed_at' => now()->toISOString(),
                         'method' => $withdrawal->payment_method,
-                    ]),
+                    ],
                 ]);
+
 
                 DB::commit();
 
@@ -342,12 +345,13 @@ class WithdrawalController extends Controller
             'rejection_reason' => $request->rejection_reason,
             'processed_by' => auth()->id(),
             'processed_at' => now(),
-            'details' => json_encode([
+            'details' => [
                 'rejected_by' => auth()->user()->name,
                 'rejected_at' => now()->toISOString(),
                 'reason' => $request->rejection_reason,
-            ]),
+            ],
         ]);
+
 
         // Envoyer l'email à l'organisateur
         try {

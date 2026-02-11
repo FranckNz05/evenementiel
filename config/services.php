@@ -42,6 +42,10 @@ return [
         'oaep_mgf' => env('AIRTEL_OAEP_MGF', 'sha1'),
     ],
 
+    'admin' => [
+        'email' => env('ADMIN_EMAIL'),
+    ],
+
     'facebook' => [
         'client_id' => env('FACEBOOK_CLIENT_ID'),
         'client_secret' => env('FACEBOOK_CLIENT_SECRET'),

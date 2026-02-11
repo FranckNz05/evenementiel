@@ -232,17 +232,35 @@ class PaymentController extends Controller
 
             if ($verificationResult['verified']) {
                 DB::transaction(function () use ($payment, $request) {
-                    // Generate QR code
-                    $qrCode = $this->paymentService->generateQrCode($payment->matricule);
-                    $qrCodePath = 'qrcodes/' . $payment->matricule . '.png';
-                    Storage::put('public/' . $qrCodePath, $qrCode);
+                    // Guard: Vérifier que le paiement peut recevoir un QR code
+                    $validator = app(\App\Services\PaymentStatusValidator::class);
+                    
+                    try {
+                        // Valider que le paiement est payé avant de générer le QR code
+                        if ($payment->statut !== Payment::STATUS_PAID) {
+                            throw new \Exception("Impossible de générer un QR code: statut = '{$payment->statut}' (attendu: 'payé')");
+                        }
+                        
+                        $validator->validateQrCodeGeneration($payment);
+                        
+                        // Generate QR code
+                        $qrCode = $this->paymentService->generateQrCode($payment->matricule);
+                        $qrCodePath = 'qrcodes/' . $payment->matricule . '.png';
+                        Storage::put('public/' . $qrCodePath, $qrCode);
 
-                    // Update payment
-                    $payment->update([
-                        'statut' => Payment::STATUS_PAID,
-                        'reference_transaction' => $request->input('reference', $payment->reference_transaction),
-                        'qr_code' => $qrCodePath
-                    ]);
+                        // Update payment
+                        $payment->update([
+                            'statut' => Payment::STATUS_PAID,
+                            'reference_transaction' => $request->input('reference', $payment->reference_transaction),
+                            'qr_code' => $qrCodePath
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::error('Erreur lors de la génération du QR code', [
+                            'payment_id' => $payment->id,
+                            'error' => $e->getMessage()
+                        ]);
+                        throw $e;
+                    }
 
                     // Update order
                     $payment->order->update(['statut' => 'payé']);
@@ -318,11 +336,25 @@ class PaymentController extends Controller
         }
 
         if (!$payment->qr_code && $payment->statut === Payment::STATUS_PAID) {
-            $qrCode = $this->paymentService->generateQrCode($payment->matricule);
-            $qrCodePath = 'qrcodes/' . $payment->matricule . '.png';
-            Storage::put('public/' . $qrCodePath, $qrCode);
+            // Guard: Vérifier que le paiement peut recevoir un QR code
+            $validator = app(\App\Services\PaymentStatusValidator::class);
+            
+            try {
+                $validator->validateQrCodeGeneration($payment);
+                
+                $qrCode = $this->paymentService->generateQrCode($payment->matricule);
+                $qrCodePath = 'qrcodes/' . $payment->matricule . '.png';
+                Storage::put('public/' . $qrCodePath, $qrCode);
 
-            $payment->update(['qr_code' => $qrCodePath]);
+                $payment->update(['qr_code' => $qrCodePath]);
+            } catch (\Exception $e) {
+                Log::error('Impossible de générer le QR code dans success()', [
+                    'payment_id' => $payment->id,
+                    'statut' => $payment->statut,
+                    'error' => $e->getMessage()
+                ]);
+                // Ne pas bloquer l'affichage de la page de succès
+            }
 
             $payment = $payment->fresh();
 

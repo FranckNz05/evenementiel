@@ -11,6 +11,7 @@ use App\Models\CustomOfferPurchase;
 use App\Models\Reservation;
 use App\Mail\PaymentConfirmation;
 use Illuminate\Support\Str;
+use App\Services\PaymentStatusValidator;
 
 class AirtelCallbackController extends Controller
 {
@@ -34,7 +35,8 @@ class AirtelCallbackController extends Controller
             $request->validate([
                 'transaction.id' => 'required|string',
                 'transaction.message' => 'required|string',
-                'transaction.status_code' => 'required|string|in:TS,TF',
+                // Airtel peut renvoyer aussi TIP/TA/TE selon les scénarios
+                'transaction.status_code' => 'required|string|in:TS,TF,TIP,TA,TE',
                 'transaction.airtel_money_id' => 'required|string',
                 'hash' => 'required|string',
             ]);
@@ -74,10 +76,15 @@ class AirtelCallbackController extends Controller
                     'message' => 'Callback traité avec succès'
                 ], 200);
             } else {
+                // Ne pas faire échouer le callback côté Airtel (éviter re-tentatives agressives)
+                Log::warning('Callback Airtel traité avec erreurs (accepté)', [
+                    'message' => $result['message'] ?? null,
+                ]);
+
                 return response()->json([
-                    'status' => 'error',
-                    'message' => $result['message']
-                ], 400);
+                    'status' => 'accepted',
+                    'message' => $result['message'] ?? 'Callback accepté avec avertissements'
+                ], 200);
             }
 
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -223,46 +230,87 @@ class AirtelCallbackController extends Controller
                 ->orWhere('transaction_id', 'like', '%' . $transactionId . '%')
                 ->first();
 
+            // Utiliser le service de validation pour mapper le statut Airtel
+            $validator = app(\App\Services\PaymentStatusValidator::class);
+
             $isSuccess = ($statusCode === 'TS');
+            $isFailed = in_array($statusCode, ['TF', 'TE'], true);
+            $isPending = in_array($statusCode, ['TA', 'TIP'], true);
 
             // Mettre à jour le paiement si trouvé
             if ($payment) {
                 $existingDetails = json_decode($payment->details ?? '{}', true) ?: [];
                 
                 // Vérifier si le paiement a déjà été traité (éviter les doublons)
-                $alreadyProcessed = ($payment->statut === 'payé' && $isSuccess) || 
-                                    ($payment->statut === 'échoué' && !$isSuccess);
+                // On compare sur le statut réel calculé après fusion des détails ci-dessous.
+                $alreadyProcessed = false;
                 
                 // Traduire le message Airtel en français
                 $translatedMessage = $this->translateAirtelMessage($message);
                 
+                // Logger le message Airtel selon le statut
+                $logContext = [
+                    'payment_id' => $payment->id,
+                    'matricule' => $payment->matricule,
+                    'transaction_id' => $transactionId,
+                    'airtel_money_id' => $airtelMoneyId,
+                    'status_code' => $statusCode,
+                    'message_original' => $message,
+                    'message_traduit' => $translatedMessage,
+                ];
+                
+                if ($isSuccess) {
+                    Log::info('Callback Airtel Money - SUCCÈS (TS)', $logContext);
+                } elseif ($isFailed) {
+                    Log::warning('Callback Airtel Money - ÉCHEC (TF/TE)', $logContext);
+                } elseif ($isPending) {
+                    Log::info('Callback Airtel Money - EN ATTENTE (TIP/TA)', $logContext);
+                }
+                
+                // Déterminer le statut et la date de paiement selon le mapping strict
+                $mergedDetails = array_merge(
+                    $existingDetails,
+                    [
+                        'airtel_callback' => true,
+                        'airtel_money_id' => $airtelMoneyId,
+                        'callback_status' => $statusCode,
+                        'callback_message' => $translatedMessage,
+                        'callback_received_at' => now()->toISOString(),
+                        'airtel_transaction_status' => $statusCode, // TS, TF, TE, TA, TIP
+                        'airtel_message' => $translatedMessage,
+                        'airtel_message_original' => $message,
+                        // contexte audit
+                        'status_change_source' => 'airtel_callback',
+                        'status_change_reason' => 'Callback Airtel reçu (' . $statusCode . ')',
+                    ],
+                    // Si échec, stocker aussi les informations d'erreur pour affichage
+                    $isFailed ? [
+                        'airtel_error_code' => $statusCode,
+                        'error_message' => $translatedMessage,
+                    ] : []
+                );
+
+                $realStatus = PaymentStatusValidator::determiner_statut_reel($mergedDetails) ?? $payment->statut;
+                $alreadyProcessed = ($payment->statut === $realStatus);
+
+                $newPaymentDate = ($realStatus === 'payé') ? now() : null;
+                $newQrCode = ($realStatus === 'payé') ? $payment->qr_code : null;
+
                 $updateData = [
-                    'statut' => $isSuccess ? 'payé' : 'échoué',
-                    'date_paiement' => $isSuccess ? now() : null,
-                    'details' => json_encode(array_merge(
-                        $existingDetails,
-                        [
-                            'airtel_callback' => true,
-                            'airtel_money_id' => $airtelMoneyId,
-                            'callback_status' => $statusCode, // TS ou TF
-                            'callback_message' => $translatedMessage,
-                            'callback_received_at' => now()->toISOString(),
-                            'airtel_transaction_status' => $statusCode, // TS ou TF
-                            // Stocker le message pour les succès aussi
-                            'airtel_message' => $translatedMessage,
-                        ],
-                        // Si échec, stocker aussi les informations d'erreur pour affichage
-                        !$isSuccess ? [
-                            'airtel_error_code' => $statusCode,
-                            'error_message' => $translatedMessage,
-                        ] : []
-                    )),
+                    'statut' => $realStatus,
+                    'date_paiement' => $newPaymentDate,
+                    'qr_code' => $newQrCode,
+                    'details' => json_encode($mergedDetails),
                 ];
                 
                 $payment->update($updateData);
+                
+                // Valider et synchroniser avec le service de validation
+                $validator->validateAndSync($payment);
 
                 // Si le paiement est réussi (TS), mettre à jour la commande
-                if ($isSuccess && $payment->order) {
+                // Ne mettre à jour la commande QUE si le statut est vraiment 'payé'
+                if ($realStatus === 'payé' && $payment->order) {
                     $payment->order->update([
                         'statut' => 'payé',
                         'payment_status' => 'payé',
@@ -336,7 +384,7 @@ class AirtelCallbackController extends Controller
                 }
 
                 // Si le paiement est réussi et qu'il y a une réservation associée
-                if ($isSuccess && $payment->reservation) {
+                if ($realStatus === 'payé' && $payment->reservation) {
                     $payment->reservation->update(['status' => 'Payé']);
 
                     // Générer et envoyer les billets par email
@@ -357,7 +405,7 @@ class AirtelCallbackController extends Controller
 
                 Log::info('Paiement mis à jour via callback Airtel', [
                     'payment_id' => $payment->id,
-                    'status' => $isSuccess ? 'payé' : 'échoué',
+                    'status' => $realStatus,
                     'has_reservation' => $payment->reservation ? true : false
                 ]);
             }
@@ -365,7 +413,7 @@ class AirtelCallbackController extends Controller
             // Mettre à jour l'achat d'offre personnalisée si trouvé
             if ($purchase) {
                 $purchase->update([
-                    'status' => $isSuccess ? 'completed' : 'failed',
+                    'status' => $isSuccess ? 'completed' : ($isPending ? 'pending' : 'failed'),
                     'transaction_id' => $airtelMoneyId,
                 ]);
 

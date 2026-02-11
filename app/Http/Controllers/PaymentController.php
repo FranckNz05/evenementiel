@@ -303,6 +303,16 @@ class PaymentController extends Controller
             
             // Récupérer le statut de transaction Airtel (TS, TF, TA, TIP, TE)
             $transactionStatus = $result['transaction_status'] ?? null;
+            
+            // Utiliser le service de validation pour mapper le statut
+            $validator = app(\App\Services\PaymentStatusValidator::class);
+            $expectedStatus = $validator->getExpectedStatus($payment);
+            
+            // Si le statut Airtel est disponible, l'utiliser en priorité
+            if ($transactionStatus) {
+                $expectedStatus = \App\Services\PaymentStatusValidator::mapAirtelStatus($transactionStatus) ?? $expectedStatus;
+            }
+            
             $isSuccess = ($transactionStatus === 'TS');
             $isFailed = in_array($transactionStatus, ['TF', 'TE']);
             $isPending = in_array($transactionStatus, ['TA', 'TIP']);
@@ -313,13 +323,26 @@ class PaymentController extends Controller
             $emailAlreadySent = ($existingDetails['confirmation_email_sent'] ?? false) === true;
             
             // Si le paiement est réussi (TS) et n'a pas encore été finalisé
-            if ($isSuccess && $payment->statut !== 'payé') {
+            if ($isSuccess && $expectedStatus === 'payé' && $payment->statut !== 'payé') {
                 DB::beginTransaction();
                 try {
-                    // Traduire le message Airtel en français
-                    $translatedMessage = $this->translateAirtelMessage($result['message'] ?? 'Transaction réussie');
+                    // Récupérer le message original d'Airtel
+                    $originalMessage = $result['message'] ?? 'Transaction réussie';
                     
-                    // Mettre à jour le paiement
+                    // Traduire le message Airtel en français
+                    $translatedMessage = $this->translateAirtelMessage($originalMessage);
+                    
+                    // Logger le message Airtel
+                    Log::info('Paiement Airtel Money - SUCCÈS (TS)', [
+                        'payment_id' => $payment->id,
+                        'matricule' => $payment->matricule,
+                        'transaction_status' => $transactionStatus,
+                        'airtel_money_id' => $result['airtel_money_id'] ?? null,
+                        'message_original' => $originalMessage,
+                        'message_traduit' => $translatedMessage,
+                    ]);
+                    
+                    // Mettre à jour le paiement avec validation
                     $payment->update([
                         'statut' => 'payé',
                         'date_paiement' => now(),
@@ -328,12 +351,16 @@ class PaymentController extends Controller
                             [
                                 'airtel_transaction_status' => $transactionStatus,
                                 'airtel_message' => $translatedMessage,
+                                'airtel_message_original' => $originalMessage, // Stocker aussi le message original
                                 'callback_message' => $translatedMessage,
                                 'verified_at' => now()->toISOString(),
                                 'verification_result' => $result
                             ]
                         ))
                     ]);
+                    
+                    // Valider et synchroniser avec le service
+                    $validator->validateAndSync($payment);
                     
                     // Mettre à jour la commande
                     if ($payment->order) {
@@ -400,24 +427,79 @@ class PaymentController extends Controller
                 }
             }
             // Si le paiement a échoué (TF ou TE) et n'a pas encore été marqué comme échoué
-            elseif ($isFailed && $payment->statut !== 'échoué') {
+            elseif ($isFailed && $expectedStatus === 'échoué' && $payment->statut !== 'échoué') {
+                // Récupérer le message original d'Airtel
+                $originalMessage = $result['message'] ?? 'Transaction échouée';
+                
                 // Traduire le message Airtel en français
-                $translatedMessage = $this->translateAirtelMessage($result['message'] ?? 'Transaction échouée');
+                $translatedMessage = $this->translateAirtelMessage($originalMessage);
+                
+                // Logger le message Airtel
+                Log::warning('Paiement Airtel Money - ÉCHEC (TF/TE)', [
+                    'payment_id' => $payment->id,
+                    'matricule' => $payment->matricule,
+                    'transaction_status' => $transactionStatus,
+                    'airtel_money_id' => $result['airtel_money_id'] ?? null,
+                    'message_original' => $originalMessage,
+                    'message_traduit' => $translatedMessage,
+                    'error_code' => $result['error_code'] ?? null,
+                ]);
                 
                 $payment->update([
                     'statut' => 'échoué',
+                    'date_paiement' => null, // Supprimer la date de paiement si échec
                     'details' => json_encode(array_merge(
                         $existingDetails,
                         [
                             'airtel_transaction_status' => $transactionStatus,
                             'airtel_message' => $translatedMessage,
-                            'airtel_error_code' => $result['error_code'] ?? null,
+                            'airtel_message_original' => $originalMessage, // Stocker aussi le message original
+                            'airtel_error_code' => $result['error_code'] ?? $transactionStatus,
                             'error_message' => $translatedMessage,
                             'verified_at' => now()->toISOString(),
                             'verification_result' => $result
                         ]
                     ))
                 ]);
+                
+                // Valider et synchroniser avec le service
+                $validator->validateAndSync($payment);
+            }
+            // Si le paiement est en attente (TA ou TIP) et n'a pas encore été marqué comme en attente
+            elseif ($isPending && $expectedStatus === 'en attente' && $payment->statut !== 'en attente') {
+                // Récupérer le message original d'Airtel
+                $originalMessage = $result['message'] ?? 'Transaction en attente';
+                
+                // Traduire le message Airtel en français
+                $translatedMessage = $this->translateAirtelMessage($originalMessage);
+                
+                // Logger le message Airtel
+                Log::info('Paiement Airtel Money - EN ATTENTE (TIP/TA)', [
+                    'payment_id' => $payment->id,
+                    'matricule' => $payment->matricule,
+                    'transaction_status' => $transactionStatus,
+                    'airtel_money_id' => $result['airtel_money_id'] ?? null,
+                    'message_original' => $originalMessage,
+                    'message_traduit' => $translatedMessage,
+                ]);
+                
+                $payment->update([
+                    'statut' => 'en attente',
+                    'date_paiement' => null, // Pas de date de paiement si en attente
+                    'details' => json_encode(array_merge(
+                        $existingDetails,
+                        [
+                            'airtel_transaction_status' => $transactionStatus,
+                            'airtel_message' => $translatedMessage,
+                            'airtel_message_original' => $originalMessage, // Stocker aussi le message original
+                            'verified_at' => now()->toISOString(),
+                            'verification_result' => $result
+                        ]
+                    ))
+                ]);
+                
+                // Valider et synchroniser avec le service
+                $validator->validateAndSync($payment);
             }
             // Si le paiement est en attente (TA ou TIP), juste mettre à jour les détails
             elseif ($isPending) {
@@ -433,13 +515,21 @@ class PaymentController extends Controller
                 ]);
             }
             
-            // Préparer la réponse JSON
+            // Récupérer le message traduit depuis les détails du paiement
+            $payment->refresh();
+            $paymentDetails = json_decode($payment->details ?? '{}', true) ?: [];
+            $airtelMessage = $paymentDetails['airtel_message'] ?? $paymentDetails['callback_message'] ?? null;
+            $originalMessage = $paymentDetails['airtel_message_original'] ?? $result['message'] ?? null;
+            
+            // Préparer la réponse JSON avec les messages
             $response = [
                 'success' => $result['success'] ?? false,
                 'status' => $result['status'] ?? 'unknown',
                 'transaction_status' => $transactionStatus, // TS, TF, TA, TIP, TE
-                'message' => $result['message'] ?? 'Statut vérifié',
-                'payment_status' => $payment->fresh()->statut,
+                'message' => $airtelMessage ?? $this->translateAirtelMessage($originalMessage ?? 'Statut vérifié'),
+                'airtel_message' => $airtelMessage, // Message traduit en français
+                'airtel_message_original' => $originalMessage, // Message original d'Airtel
+                'payment_status' => $payment->statut,
                 'retry' => $result['retry'] ?? false,
             ];
             
@@ -615,6 +705,20 @@ class PaymentController extends Controller
      */
     private function generateTicketsPdf(Payment $payment)
     {
+        // Guard: Vérifier que le paiement est réellement payé avant de générer les QR codes
+        $validator = app(\App\Services\PaymentStatusValidator::class);
+        
+        try {
+            $validator->validateQrCodeGeneration($payment);
+        } catch (\Exception $e) {
+            Log::error('Impossible de générer les QR codes: paiement non confirmé', [
+                'payment_id' => $payment->id,
+                'statut' => $payment->statut,
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
+        
         // Charger toutes les relations nécessaires
         $payment->load(['order.event.organizer', 'order.event.sponsors', 'order.tickets', 'user']);
         
@@ -764,5 +868,64 @@ class PaymentController extends Controller
             ]);
             return null;
         }
+    }
+
+    /**
+     * Traduit les messages Airtel Money en français
+     * 
+     * @param string $message Message original d'Airtel
+     * @return string Message traduit en français
+     */
+    private function translateAirtelMessage($message)
+    {
+        if (empty($message)) {
+            return 'Transaction réussie';
+        }
+
+        // Messages de succès
+        $translations = [
+            // Messages de succès
+            'Your transaction has been successfully processed' => 'Votre transaction a été traitée avec succès',
+            'Transaction is successful' => 'Transaction réussie',
+            'Transaction is successful.' => 'Transaction réussie',
+            'Transaction successfully processed' => 'Transaction traitée avec succès',
+            
+            // Messages d'échec
+            'Transaction failed' => 'Transaction échouée',
+            'Transaction Failed' => 'Transaction échouée',
+            'Transaction Timed Out' => 'Transaction expirée',
+            'Transaction Expired' => 'Transaction expirée',
+            'Transaction not permitted to Payee' => 'Transaction non autorisée pour le bénéficiaire',
+            'Refused' => 'Transaction refusée',
+            'The transaction was refused' => 'La transaction a été refusée',
+            'Exceeds withdrawal amount limit' => 'Limite de montant de retrait dépassée',
+            'Withdrawal amount limit exceeded' => 'Limite de montant de retrait dépassée',
+            'Transaction ID is invalid' => 'Identifiant de transaction invalide',
+            'User didn\'t enter the pin' => 'L\'utilisateur n\'a pas entré le code PIN',
+            'Transaction Not Found' => 'Transaction introuvable',
+            'The transaction was not found' => 'La transaction n\'a pas été trouvée',
+            
+            // Messages en attente
+            'Transaction in Progress' => 'Transaction en cours',
+            'Transaction ambiguous' => 'Transaction ambiguë',
+            'Transaction Ambiguous' => 'Transaction ambiguë',
+            'Please confirm the payment on your phone' => 'Veuillez confirmer le paiement sur votre téléphone',
+        ];
+
+        // Vérifier si le message exact existe dans les traductions
+        if (isset($translations[$message])) {
+            return $translations[$message];
+        }
+
+        // Vérifier les correspondances partielles (insensible à la casse)
+        $messageLower = strtolower($message);
+        foreach ($translations as $english => $french) {
+            if (stripos($messageLower, strtolower($english)) !== false) {
+                return $french;
+            }
+        }
+
+        // Si aucune traduction trouvée, retourner le message original
+        return $message;
     }
 }

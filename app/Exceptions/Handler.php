@@ -2,6 +2,8 @@
 
 namespace App\Exceptions;
 
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
 
@@ -26,5 +28,12 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
             //
         });
+
+        // Ignorer le rapport des erreurs d'authentification et de modèle non trouvé
+        // car elles sont courantes (sessions expirées, liens morts) et polluent les logs.
+        $this->ignore([
+            AuthenticationException::class,
+            ModelNotFoundException::class,
+        ]);
     }
 }

@@ -162,7 +162,10 @@ Route::middleware(['auth', 'role:organizer'])->group(function () {
 // Routes publiques
 // Organizer Routes
 Route::get('organizers', [App\Http\Controllers\OrganizerController::class, 'index'])->name('organizers.index');
-Route::get('organizers/{organizer}', [App\Http\Controllers\OrganizerController::class, 'show'])->name('organizers.show');
+Route::get('organizers/{organizer}', [App\Http\Controllers\OrganizerController::class, 'show'])
+    ->name('organizers.show')
+    ->where('organizer', '[a-zA-Z0-9_-]+');
+
 
 // Organizer Follow Routes (authenticated users only)
 Route::middleware('auth')->group(function () {
