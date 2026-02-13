@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class reservationTicket extends Model
+class ReservationTicket extends Model
 {
     protected $table = 'reservation_tickets';
 
@@ -18,7 +18,7 @@ class reservationTicket extends Model
 
     public function reservation()
     {
-        return $this->belongsTo(reservation::class);
+        return $this->belongsTo(Reservation::class);
     }
 
     public function ticket()
@@ -26,3 +26,4 @@ class reservationTicket extends Model
         return $this->belongsTo(Ticket::class);
     }
 }
+

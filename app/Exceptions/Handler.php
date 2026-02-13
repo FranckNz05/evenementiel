@@ -31,7 +31,7 @@ class Handler extends ExceptionHandler
 
         // Ignorer le rapport des erreurs d'authentification et de modèle non trouvé
         // car elles sont courantes (sessions expirées, liens morts) et polluent les logs.
-        $this->ignore([
+        $this->dontReport([
             AuthenticationException::class,
             ModelNotFoundException::class,
         ]);
