@@ -679,7 +679,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Interactions (commentaires, likes, vues)
     Route::prefix('interactions')->group(function () {
-        Route::post('/events/{event}/comments', [App\Http\Controllers\EventCommentController::class, 'store'])->name('events.comments.store');
+        // Route events.comments.store déjà définie ligne 196 - doublon supprimé
         Route::post('/blogs/{blog}/comments', [CommentController::class, 'store'])->name('blogs.comments.store');
         Route::post('/events/{event}/likes', [LikeController::class, 'store'])->name('events.likes.store');
         Route::post('/blogs/{blog}/likes', [LikeController::class, 'store'])->name('blogs.likes.store');
@@ -935,7 +935,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Interactions (commentaires, likes, vues)
     Route::prefix('interactions')->group(function () {
-        Route::post('/events/{event}/comments', [App\Http\Controllers\EventCommentController::class, 'store'])->name('events.comments.store');
+        // Route events.comments.store déjà définie ligne 196 - doublon supprimé
         Route::post('/blogs/{blog}/comments', [CommentController::class, 'store'])->name('blogs.comments.store');
         Route::post('/events/{event}/likes', [LikeController::class, 'store'])->name('events.likes.store');
         Route::post('/blogs/{blog}/likes', [LikeController::class, 'store'])->name('blogs.likes.store');
