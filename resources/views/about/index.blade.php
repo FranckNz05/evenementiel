@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'À proposs de MokiliEvent')
+@section('title', 'À propos de MokiliEvent')
 
 @section('content')
 
