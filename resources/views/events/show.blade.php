@@ -7,7 +7,14 @@
 <!-- Hero Section with Gradient Overlay -->
 <div class="event-hero-container">
     <div class="event-hero-image">
-        <img src="{{ Storage::url($event->image) }}" alt="{{ $event->title }}" class="img-fluid w-100">
+        <img src="{{ Storage::url($event->image) }}" 
+             alt="{{ $event->title }}" 
+             class="img-fluid w-100"
+             fetchpriority="high"
+             loading="eager"
+             decoding="async"
+             width="1200"
+             height="450">
         <div class="hero-gradient"></div>
         <div class="hero-content container">
             <div class="hero-badges">
@@ -48,7 +55,14 @@
                                 $img = $u->profil_image;
                                 $url = $img ? (str_starts_with($img,'http') ? $img : asset('storage/'.$img)) : 'https://ui-avatars.com/api/?name='.urlencode(($u->prenom.' '.$u->nom));
                             @endphp
-                            <img src="{{ $url }}" alt="{{ $u->prenom }}" class="rounded-circle border border-white" style="width:36px;height:36px;object-fit:cover;position:absolute;left:{{ $idx*22 }}px;">
+                            <img src="{{ $url }}" 
+                                 alt="{{ $u->prenom }}" 
+                                 class="rounded-circle border border-white" 
+                                 style="width:36px;height:36px;object-fit:cover;position:absolute;left:{{ $idx*22 }}px;"
+                                 loading="lazy"
+                                 decoding="async"
+                                 width="36"
+                                 height="36">
                         @endforeach
                     </div>
                     @if($attendees->count() > 7)
@@ -153,7 +167,11 @@
                         <div class="organizer-card">
                             <div class="organizer-avatar">
                                 <img src="{{ $event->organizer && $event->organizer->logo ? asset('storage/' . $event->organizer->logo) : asset('images/default-profile.jpg') }}"
-                                     alt="{{ $event->organizer->company_name ?? 'Organisateur' }}">
+                                     alt="{{ $event->organizer->company_name ?? 'Organisateur' }}"
+                                     loading="lazy"
+                                     decoding="async"
+                                     width="80"
+                                     height="80">
                                 @if($event->organizer->is_verified)
                                     <span class="verified-badge" title="Organisateur vérifié">
                                         <i class="fas fa-check"></i>
@@ -211,7 +229,12 @@
                         @foreach($event->sponsors as $sponsor)
                         <div class="sponsor-item" data-bs-toggle="tooltip" title="{{ $sponsor->name }}">
                             @if($sponsor->logo_path)
-                                <img src="{{ Storage::url($sponsor->logo_path) }}" alt="{{ $sponsor->name }}">
+                                <img src="{{ Storage::url($sponsor->logo_path) }}" 
+                                     alt="{{ $sponsor->name }}"
+                                     loading="lazy"
+                                     decoding="async"
+                                     width="100"
+                                     height="100">
                             @else
                                 <div class="sponsor-placeholder">
                                     <span>{{ substr($sponsor->name, 0, 2) }}</span>
@@ -530,7 +553,11 @@
                         <img src="{{ auth()->user()->getProfilePhotoUrlAttribute() }}" 
                              alt="{{ auth()->user()->nom }}" 
                              class="rounded-circle"
-                             style="width: 40px; height: 40px; object-fit: cover;">
+                             style="width: 40px; height: 40px; object-fit: cover;"
+                             loading="lazy"
+                             decoding="async"
+                             width="40"
+                             height="40">
                         <div class="flex-grow-1">
                             <textarea name="content" 
                                       id="comment-content" 
@@ -562,6 +589,11 @@
                             <img src="{{ $comment->user->getProfilePhotoUrlAttribute() }}" 
                                  alt="{{ $comment->user->nom }}" 
                                  class="rounded-circle"
+                                 style="width: 40px; height: 40px; object-fit: cover;"
+                                 loading="lazy"
+                                 decoding="async"
+                                 width="40"
+                                 height="40">
                                  style="width: 35px; height: 35px; object-fit: cover;">
                             <div class="flex-grow-1">
                                 <div class="d-flex justify-content-between align-items-start mb-1">
@@ -661,7 +693,11 @@
                                             <img src="{{ $reply->user->getProfilePhotoUrlAttribute() }}" 
                                                  alt="{{ $reply->user->nom }}" 
                                                  class="rounded-circle"
-                                                 style="width: 28px; height: 28px; object-fit: cover;">
+                                                 style="width: 28px; height: 28px; object-fit: cover;"
+                                                 loading="lazy"
+                                                 decoding="async"
+                                                 width="28"
+                                                 height="28">
                                             <div class="flex-grow-1">
                                                 <div class="d-flex justify-content-between align-items-start">
                                                     <div>

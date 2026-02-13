@@ -284,7 +284,14 @@
                             <div class="col-md-4">
                                 <div class="position-relative h-100" style="min-height: 200px;">
                                     @if($event->image)
-                                        <img src="{{ Storage::url($event->image) }}" class="img-fluid w-100 h-100" alt="{{ $event->title }}" style="object-fit: cover;">
+                                        <img src="{{ Storage::url($event->image) }}" 
+                                             class="img-fluid w-100 h-100" 
+                                             alt="{{ $event->title }}" 
+                                             style="object-fit: cover;"
+                                             loading="lazy"
+                                             decoding="async"
+                                             width="400"
+                                             height="200">
                                     @else
                                         <div class="h-100 d-flex align-items-center justify-content-center" style="background-color: var(--bleu-nuit-clair); min-height: 200px;">
                                             <i class="fas fa-calendar-alt fa-3x text-white"></i>

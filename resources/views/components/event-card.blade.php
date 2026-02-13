@@ -30,7 +30,11 @@
                 <img src="{{ Storage::url($event->image) }}"
                      alt="{{ $event->title }}"
                      class="card-img-top"
-                     style="height: 200px; object-fit: cover;">
+                     style="height: 200px; object-fit: cover;"
+                     loading="lazy"
+                     decoding="async"
+                     width="400"
+                     height="200">
             @else
                 <div class="card-img-top d-flex align-items-center justify-content-center"
                      style="height: 200px; background-color: var(--bleu-nuit-clair);">

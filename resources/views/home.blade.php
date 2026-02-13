@@ -35,9 +35,27 @@
 </style>
 
 <!-- Hero Section Start -->
-<div class="container-fluid py-5 hero-header position-relative" style="background-image: url('{{ asset('images/foule-humains-copie.jpg') }}'); height: 500px; background-size: cover; background-position: center;">
-    <div class="overlay position-absolute w-100 h-100" style="background: rgba(0, 0, 0, 0.6); top: 0; left: 0;"></div>
-    <div class="container py-5 position-relative text-center text-white">
+@php
+    // Optimisation : utiliser WebP avec fallback, limiter largeur à 1200px
+    $heroImageWebP = asset('images/foule-humains-copie.webp');
+    $heroImageJPG = asset('images/foule-humains-copie.jpg');
+    $heroImageAVIF = asset('images/foule-humains-copie.avif');
+@endphp
+<div class="container-fluid py-5 hero-header position-relative" style="height: 500px; background-size: cover; background-position: center;">
+    <picture>
+        <source srcset="{{ $heroImageAVIF }}" type="image/avif">
+        <source srcset="{{ $heroImageWebP }}" type="image/webp">
+        <img src="{{ $heroImageJPG }}" 
+             alt="MokiliEvent - Événements au Congo" 
+             class="hero-bg-image"
+             style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;"
+             fetchpriority="high"
+             width="1200"
+             height="500"
+             loading="eager">
+    </picture>
+    <div class="overlay position-absolute w-100 h-100" style="background: rgba(0, 0, 0, 0.6); top: 0; left: 0; z-index: 1;"></div>
+    <div class="container py-5 position-relative text-center text-white" style="z-index: 2;">
         <h1 class="mb-4 display-3 fw-bold">Le repère incontournable pour tous vos événements !</h1>
         <div class="mx-auto" style="max-width: 600px;">
             <form action="{{ url('/direct-events') }}" method="GET" class="d-flex position-relative">
@@ -123,7 +141,11 @@
                                 @if($organizer->logo)
                                     <img src="{{ asset('storage/' . $organizer->logo) }}"
                                          alt="{{ $organizer->company_name ?? 'Organisateur' }}"
-                                         class="img-fluid w-100 h-100 object-fit-cover">
+                                         class="img-fluid w-100 h-100 object-fit-cover"
+                                         loading="lazy"
+                                         decoding="async"
+                                         width="120"
+                                         height="120">
                                 @else
                                     <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-light">
                                         <i class="fas fa-building fa-2x text-muted"></i>
@@ -208,7 +230,11 @@
                          style="box-shadow: -8px 0 15px -5px rgba(0,0,0,0.2); height: 120px;">
                         <img src="{{ asset($category->image) }}"
                              alt="{{ $category->name }}"
-                             class="img-fluid w-100 h-100 object-fit-cover">
+                             class="img-fluid w-100 h-100 object-fit-cover"
+                             loading="lazy"
+                             decoding="async"
+                             width="400"
+                             height="120">
                         <div class="category-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center ps-4"
                              style="background: linear-gradient(to right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);">
                             <h5 class="text-white mb-0">{{ $category->name }}</h5>
@@ -227,7 +253,8 @@
 @endsection
 
 @push('styles')
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css">
+<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css"></noscript>
 <style>
 :root {
     /* Home page palette: emerald/teal, no red/yellow */
@@ -437,7 +464,7 @@ h2.display-5.fw-bold {
 @endpush
 
 @push('scripts')
-<script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js" defer></script>
 <script>
 // Vérifier que jQuery est chargé avant d'initialiser les carrousels
 if (typeof jQuery === 'undefined') {
