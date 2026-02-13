@@ -659,7 +659,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('reservations')->name('reservations.')->group(function () {
         Route::get('/', [ReservationController::class, 'index'])->name('index');
         Route::get('/{reservation}', [ReservationController::class, 'show'])->name('show');
-        Route::post('/reservations/{reservation}/cancel', [ReservationController::class, 'cancel'])->name('cancel');
+        // Route reservations.cancel déjà définie ligne 852 - doublon supprimé
     });
 });
     // Routes des reservations
@@ -915,7 +915,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('reservations')->name('reservations.')->group(function () {
         Route::get('/', [ReservationController::class, 'index'])->name('index');
         Route::get('/{reservation}', [ReservationController::class, 'show'])->name('show');
-        Route::post('/reservations/{reservation}/cancel', [ReservationController::class, 'cancel'])->name('cancel');
+        // Route reservations.cancel déjà définie ligne 852 - doublon supprimé
     });
 });
     // Routes des reservations
