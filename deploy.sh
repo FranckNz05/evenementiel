@@ -79,8 +79,15 @@ composer dump-autoload --optimize --no-dev || warning "Échec de l'optimisation 
 # 6. Vérification des permissions (optionnel mais recommandé)
 log "Vérification des permissions..."
 if [ -d "storage" ]; then
-    chmod -R 775 storage bootstrap/cache || warning "Impossible de modifier les permissions (peut nécessiter sudo)"
-    chown -R cursor:www-data storage bootstrap/cache || warning "Impossible de modifier le propriétaire (peut nécessiter sudo)"
+    # Essayer avec sudo d'abord, puis sans sudo
+    if command -v sudo &> /dev/null; then
+        sudo chmod -R 775 storage bootstrap/cache 2>/dev/null || chmod -R 775 storage bootstrap/cache 2>/dev/null || true
+        sudo chown -R cursor:www-data storage bootstrap/cache 2>/dev/null || chown -R cursor:www-data storage bootstrap/cache 2>/dev/null || true
+    else
+        chmod -R 775 storage bootstrap/cache 2>/dev/null || true
+        chown -R cursor:www-data storage bootstrap/cache 2>/dev/null || true
+    fi
+    log "Permissions vérifiées"
 fi
 
 # 7. Rechargement de Nginx
