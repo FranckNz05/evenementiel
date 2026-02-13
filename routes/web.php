@@ -274,10 +274,7 @@ Route::middleware(['auth'])->group(function () {
         return redirect()->route('custom-events.wizard.step1');
     })->name('custom-events.create');
 
-    // Profile
-    Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [App\Http\Controllers\ProfileController::class, 'destroy'])->name('profile.destroy');
+    // Profile - Routes déjà définies dans le groupe 'mon-profil' (ligne 1299) - doublons supprimés
     
     // Custom Events
     Route::resource('custom-events', App\Http\Controllers\CustomEventController::class);
@@ -656,15 +653,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Tableau de bord
     Route::get('/tableau-de-bord', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Profil utilisateur
-    Route::prefix('mon-profil')->name('profile.')->group(function () {
-        Route::get('/', [App\Http\Controllers\ProfileController::class, 'edit'])->name('edit');
-        Route::get('/show', [App\Http\Controllers\ProfileController::class, 'show'])->name('show');
-        Route::patch('/', [App\Http\Controllers\ProfileController::class, 'update'])->name('update');
-        Route::delete('/', [App\Http\Controllers\ProfileController::class, 'destroy'])->name('destroy');
-        Route::get('/mes-billets', [App\Http\Controllers\ProfileController::class, 'tickets'])->name('tickets');
-        Route::get('/mes-evenements', [App\Http\Controllers\ProfileController::class, 'events'])->name('events');
-    });
+    // Profil utilisateur - Routes déjà définies ligne 1296 - doublons supprimés
 
     // Gestion des reservations et réservations
     Route::middleware(['auth'])->group(function () {
@@ -920,15 +909,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Tableau de bord
     Route::get('/tableau-de-bord', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Profil utilisateur
-    Route::prefix('mon-profil')->name('profile.')->group(function () {
-        Route::get('/', [App\Http\Controllers\ProfileController::class, 'edit'])->name('edit');
-        Route::get('/show', [App\Http\Controllers\ProfileController::class, 'show'])->name('show');
-        Route::patch('/', [App\Http\Controllers\ProfileController::class, 'update'])->name('update');
-        Route::delete('/', [App\Http\Controllers\ProfileController::class, 'destroy'])->name('destroy');
-        Route::get('/mes-billets', [App\Http\Controllers\ProfileController::class, 'tickets'])->name('tickets');
-        Route::get('/mes-evenements', [App\Http\Controllers\ProfileController::class, 'events'])->name('events');
-    });
+    // Profil utilisateur - Routes déjà définies ligne 1296 - doublons supprimés
 
     // Gestion des reservations et réservations
     Route::middleware(['auth'])->group(function () {
@@ -1233,9 +1214,9 @@ Route::middleware(['auth', 'verified', 'organizer'])->prefix('organizer')->name(
     // Tableau de bord
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
-    // Profil
-    Route::get('/profile', [OrganizerProfileController::class, 'edit'])->name('profile.edit');
-    Route::put('/profile', [OrganizerProfileController::class, 'update'])->name('profile.update');
+    // Profil organisateur - Utilisation d'un nom différent pour éviter le conflit avec profile.edit
+    Route::get('/profile', [OrganizerProfileController::class, 'edit'])->name('organizer.profile.edit');
+    Route::put('/profile', [OrganizerProfileController::class, 'update'])->name('organizer.profile.update');
 
     // Événements
     Route::resource('events', App\Http\Controllers\Organizer\EventController::class)->except(['show']);
