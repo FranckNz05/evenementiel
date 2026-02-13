@@ -244,7 +244,7 @@ Route::middleware('guest')->group(function () {
     Route::get('reset-password/{token}', [App\Http\Controllers\Auth\NewPasswordController::class, 'create'])
         ->name('password.reset');
     Route::post('reset-password', [App\Http\Controllers\Auth\NewPasswordController::class, 'store'])
-        ->name('password.update');
+        ->name('password.store');
 });
 
 // Email Verification via OTP (Web) - Accessible à tous (invités et authentifiés)
@@ -585,11 +585,7 @@ Route::middleware('auth')->group(function () {
         ->name('verification.resend');
     */
 
-    Route::get('mot-de-passe/confirmer', [App\Http\Controllers\Auth\ConfirmablePasswordController::class, 'show'])
-                ->name('password.confirm');
-    Route::post('mot-de-passe/confirmer', [App\Http\Controllers\Auth\ConfirmablePasswordController::class, 'store']);
-
-    Route::put('mot-de-passe', [App\Http\Controllers\Auth\PasswordController::class, 'update'])->name('password.update');
+    // Routes password déjà définies ligne 260-264 - doublons supprimés
 
     Route::post('/logout', [App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'destroy'])
                 ->name('logout');
@@ -1170,9 +1166,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 
 // Route pour la mise à jour du mot de passe
-Route::put('/password', [App\Http\Controllers\Auth\PasswordController::class, 'update'])
-    ->middleware(['auth'])
-    ->name('password.update');
+// Route password.update déjà définie ligne 264 avec 'mot-de-passe' - doublon supprimé
 
 
 
