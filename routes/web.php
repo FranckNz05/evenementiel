@@ -626,12 +626,7 @@ Route::middleware(['auth'])->prefix('devenir-organisateur')->name('organizer-req
     Route::get('/status', [OrganizerRequestController::class, 'status'])->name('status');
 });
 
-// Routes ADMIN pour gérer les demandes d'organisateurs
-Route::prefix('admin/demandes-organisateurs')->name('admin.organizer-requests.')->middleware(['auth', 'role:Administrateur'])->group(function () {
-    Route::get('/', [App\Http\Controllers\OrganizerRequestController::class, 'adminIndex'])->name('index');
-    Route::post('/{organizerRequest}/approve', [App\Http\Controllers\OrganizerRequestController::class, 'approve'])->name('approve');
-    Route::post('/{organizerRequest}/reject', [App\Http\Controllers\OrganizerRequestController::class, 'reject'])->name('reject');
-});
+// Routes ADMIN pour gérer les demandes d'organisateurs - Routes déjà définies ligne 862 - doublons supprimés
 
 // Les routes PawaPay sont maintenant dans routes/pawapay.php
 
@@ -882,12 +877,7 @@ Route::middleware(['auth', 'verified'])
 // Les routes organisateur sont maintenant dans routes/organizer.php
 
 
-// Routes ADMIN pour gérer les demandes d'organisateurs
-Route::prefix('admin/demandes-organisateurs')->name('admin.organizer-requests.')->middleware(['auth', 'role:Administrateur'])->group(function () {
-    Route::get('/', [App\Http\Controllers\OrganizerRequestController::class, 'adminIndex'])->name('index');
-    Route::post('/{organizerRequest}/approve', [App\Http\Controllers\OrganizerRequestController::class, 'approve'])->name('approve');
-    Route::post('/{organizerRequest}/reject', [App\Http\Controllers\OrganizerRequestController::class, 'reject'])->name('reject');
-});
+// Routes ADMIN pour gérer les demandes d'organisateurs - Routes déjà définies ligne 862 - doublons supprimés
 
 // Les routes PawaPay sont maintenant dans routes/pawapay.php
 
