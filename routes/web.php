@@ -966,8 +966,7 @@ Route::middleware(['auth', 'verified', 'role:Administrateur'])->prefix('Administ
     Route::post('users/{user}/influencers/approve', [AdminUserController::class, 'approveInfluencer'])->name('users.influencers.approve');
     Route::post('users/{user}/influencers/reject', [AdminUserController::class, 'rejectInfluencer'])->name('users.influencers.reject');
     
-    // Tickets
-    Route::resource('tickets', AdminTicketController::class);
+    // Tickets - Routes déjà définies ligne 1062 - doublon supprimé
     
     // Routes pour les promotions de tickets
     Route::get('tickets/{ticket}/promotion', [AdminTicketController::class, 'showPromotionForm'])->name('tickets.promotion-form');
@@ -1130,7 +1129,7 @@ Route::middleware(['auth', 'role:Administrateur|Organizer'])->group(function () 
 // Routes pour consulter et télécharger les tickets (nécessitent un compte vérifié)
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/tickets', [App\Http\Controllers\TicketController::class, 'index'])->name('tickets.index');
-    Route::get('/tickets/{order}', [App\Http\Controllers\TicketController::class, 'show'])->name('tickets.show');
+    // Route tickets.show déjà définie ligne 1065 - doublon supprimé
     Route::get('/tickets/download/{payment}', [App\Http\Controllers\TicketController::class, 'download'])->name('tickets.download');
 });
 
