@@ -113,14 +113,7 @@ Route::middleware(['auth', 'role:organizer'])->prefix('organizer')->name('organi
     // Dashboard principal
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Événements
-    Route::get('/events', [App\Http\Controllers\Organizer\EventController::class, 'index'])->name('events.index');
-    // Route /events/create est définie dans le groupe accessible à tous (ligne 111)
-    Route::post('/events', [App\Http\Controllers\Organizer\EventController::class, 'store'])->name('events.store');
-    Route::get('/events/{event}', [App\Http\Controllers\Organizer\EventController::class, 'show'])->name('events.show');
-    Route::get('/events/{event}/edit', [App\Http\Controllers\Organizer\EventController::class, 'edit'])->name('events.edit');
-    Route::put('/events/{event}', [App\Http\Controllers\Organizer\EventController::class, 'update'])->name('events.update');
-    Route::delete('/events/{event}', [App\Http\Controllers\Organizer\EventController::class, 'destroy'])->name('events.destroy');
+    // Événements - Routes déjà définies ligne 1210 (route resource) - doublons supprimés
 
     // Paiements
     Route::get('/payments', [OrganizerPaymentController::class, 'index'])->name('payments.index');
