@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
 
 @section('content')
 <div class="container py-5">
@@ -26,11 +26,21 @@
                                 <tr>
                                     <td>{{ $payment->id }}</td>
                                     <td>
-                                        <a href="{{ route('events.show', $payment->event) }}">
-                                            {{ $payment->event->title }}
-                                        </a>
+                                        @if($payment->event)
+                                            <a href="{{ route('events.show', $payment->event) }}">
+                                                {{ $payment->event->title }}
+                                            </a>
+                                        @else
+                                            <span class="text-muted">Événement supprimé</span>
+                                        @endif
                                     </td>
-                                    <td>{{ $payment->ticket->nom }}</td>
+                                    <td>
+                                        @if($payment->orderTicket && $payment->orderTicket->ticket)
+                                            {{ $payment->orderTicket->ticket->nom }}
+                                        @else
+                                            <span class="text-muted">Ticket non disponible</span>
+                                        @endif
+                                    </td>
                                     <td>{{ number_format($payment->montant, 2) }} FC</td>
                                     <td>
                                         @if($payment->statut === 'payé')
@@ -79,3 +89,4 @@
     </div>
 </div>
 @endsection
+

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Paiement de la commande')
+@section('title', 'Paiement de la reservation')
 
 @section('content')
 <div class="container-xxl py-5">
@@ -9,7 +9,7 @@
             <div class="col-lg-8">
                 <div class="card border-0 bg-light shadow-sm">
                     <div class="card-body p-4">
-                        <h4 class="card-title mb-4">Détails de la commande #{{ $order->order_number }}</h4>
+                        <h4 class="card-title mb-4">Détails de la reservation #{{ $order->order_number }}</h4>
 
                         <!-- Détails de l'événement -->
                         <div class="mb-4">

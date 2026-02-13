@@ -3,19 +3,6 @@
 @section('title', 'FAQ - Questions fréquentes')
 
 @section('content')
-<!-- Page Header Start -->
-<div class="container-fluid page-header mb-5 wow fadeIn" data-wow-delay="0.1s">
-    <div class="container">
-        <h1 class="display-3 mb-3 animated slideInDown">FAQ</h1>
-        <nav aria-label="breadcrumb animated slideInDown">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ route('home') }}">Accueil</a></li>
-                <li class="breadcrumb-item active" aria-current="page">FAQ</li>
-            </ol>
-        </nav>
-    </div>
-</div>
-<!-- Page Header End -->
 
 <!-- FAQ Start -->
 <div class="container-xxl py-5">
@@ -115,15 +102,15 @@
                 <div class="border-start border-5 border-primary ps-4 mb-5">
                     <h3 class="mb-4">Vous n'avez pas trouvé votre réponse ?</h3>
                     <p>Notre équipe est là pour vous aider. N'hésitez pas à nous contacter.</p>
-                    <a class="btn btn-primary rounded-pill py-3 px-5" href="{{ route('contact.index') }}">Contactez-nous</a>
+                    <a class="btn btn-primary rounded-pill py-3 px-5" href="{{ route('contact') }}">Contactez-nous</a>
                 </div>
                 <div class="border-start border-5 border-primary ps-4">
                     <h3 class="mb-4">Liens utiles</h3>
                     <div class="d-flex flex-column justify-content-start">
-                        <a class="text-body mb-2" href="{{ route('about.index') }}"><i class="fa fa-arrow-right text-primary me-2"></i>À propos de nous</a>
-                        <a class="text-body mb-2" href="{{ route('events.index') }}"><i class="fa fa-arrow-right text-primary me-2"></i>Découvrir nos événements</a>
+                        <a class="text-body mb-2" href="{{ route('about') }}"><i class="fa fa-arrow-right text-primary me-2"></i>À propos de nous</a>
+                        <a class="text-body mb-2" href="{{ url('/direct-events') }}"><i class="fa fa-arrow-right text-primary me-2"></i>Découvrir nos événements</a>
                         <a class="text-body mb-2" href="{{ route('blogs.index') }}"><i class="fa fa-arrow-right text-primary me-2"></i>Blog</a>
-                        <a class="text-body" href="{{ route('contact.index') }}"><i class="fa fa-arrow-right text-primary me-2"></i>Contact</a>
+                        <a class="text-body" href="{{ route('contact') }}"><i class="fa fa-arrow-right text-primary me-2"></i>Contact</a>
                     </div>
                 </div>
             </div>

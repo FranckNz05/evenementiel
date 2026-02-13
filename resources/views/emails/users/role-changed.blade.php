@@ -15,7 +15,7 @@ En tant qu'organisateur, vous pouvez désormais :
 - Gérer vos ventes de billets
 @endcomponent
 
-@component('mail::button', ['url' => route('organizer.dashboard')])
+@component('mail::button', ['url' => route('dashboard')])
 Accéder à mon tableau de bord
 @endcomponent
 

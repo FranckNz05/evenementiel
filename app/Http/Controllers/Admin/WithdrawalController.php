@@ -195,7 +195,19 @@ class WithdrawalController extends Controller
                         ]);
                     }
 
-                    return back()->with('success', 'Retrait approuvé et traité avec succès. L\'argent a été envoyé à ' . $withdrawal->phone_number);
+                    // Message de succès avec détails Airtel
+                    $successMessage = 'Retrait approuvé et traité avec succès. L\'argent a été envoyé à ' . $withdrawal->phone_number;
+                    if (!empty($result['transaction_id'])) {
+                        $successMessage .= ' (Transaction ID: ' . $result['transaction_id'] . ')';
+                    }
+                    if (!empty($result['airtel_money_id'])) {
+                        $successMessage .= ' (Airtel Money ID: ' . $result['airtel_money_id'] . ')';
+                    }
+                    if (!empty($result['response_code'])) {
+                        $successMessage .= ' [Code: ' . $result['response_code'] . ']';
+                    }
+                    
+                    return back()->with('success', $successMessage);
                 } else {
                     // Retrait échoué
                     // Reconnecter si nécessaire avant la mise à jour
@@ -206,14 +218,47 @@ class WithdrawalController extends Controller
                         DB::connection()->reconnect();
                     }
                     
+                    // Préparer les détails complets avec la réponse Airtel
+                    $details = [
+                        'airtel_response' => $result,
+                        'processed_by' => auth()->user()->name,
+                        'error_at' => now()->toISOString(),
+                    ];
+                    
+                    // Ajouter la réponse brute d'Airtel si disponible
+                    if (isset($result['raw_response'])) {
+                        $details['airtel_raw_response'] = $result['raw_response'];
+                    }
+                    
+                    // Ajouter le contenu brut de la réponse HTTP si disponible
+                    if (isset($result['raw_body'])) {
+                        $details['airtel_raw_body'] = $result['raw_body'];
+                    }
+                    
+                    // Ajouter le message d'Airtel si disponible
+                    if (isset($result['airtel_message'])) {
+                        $details['airtel_message'] = $result['airtel_message'];
+                    }
+                    
+                    // Logger la réponse complète d'Airtel
+                    Log::error('Retrait Airtel Money échoué - Réponse complète', [
+                        'withdrawal_id' => $withdrawal->id,
+                        'phone' => $withdrawal->phone_number,
+                        'amount' => $withdrawal->amount,
+                        'airtel_response' => $result,
+                        'raw_response' => $result['raw_response'] ?? null,
+                        'raw_body' => $result['raw_body'] ?? null,
+                        'airtel_message' => $result['airtel_message'] ?? $result['message'] ?? null,
+                        'response_code' => $result['response_code'] ?? null,
+                        'transaction_id' => $result['transaction_id'] ?? null,
+                        'status' => $result['status'] ?? null,
+                        'message' => $result['message'] ?? null,
+                    ]);
+                    
                     $withdrawal->update([
                         'status' => 'rejected',
                         'rejection_reason' => $result['message'] ?? 'Erreur lors du traitement Airtel Money',
-                        'details' => [
-                            'airtel_response' => $result,
-                            'processed_by' => auth()->user()->name,
-                            'error_at' => now()->toISOString(),
-                        ],
+                        'details' => $details,
                     ]);
 
 
@@ -229,7 +274,43 @@ class WithdrawalController extends Controller
                         ]);
                     }
 
-                    return back()->with('error', 'Erreur lors du retrait: ' . ($result['message'] ?? 'Erreur inconnue'));
+                    // Message d'erreur détaillé avec informations Airtel
+                    $errorMessage = 'Erreur lors du retrait';
+                    
+                    // Ajouter le message d'erreur d'Airtel
+                    if (!empty($result['message'])) {
+                        $errorMessage .= ': ' . $result['message'];
+                    } else {
+                        $errorMessage .= ': Erreur inconnue';
+                    }
+                    
+                    // Ajouter le code d'erreur Airtel si disponible
+                    if (!empty($result['response_code'])) {
+                        $errorMessage .= ' [Code: ' . $result['response_code'] . ']';
+                    }
+                    
+                    // Ajouter l'ID de transaction si disponible
+                    if (!empty($result['transaction_id'])) {
+                        $errorMessage .= ' (Transaction ID: ' . $result['transaction_id'] . ')';
+                    }
+                    
+                    // Ajouter des informations supplémentaires selon le code d'erreur
+                    if (!empty($result['response_code'])) {
+                        $errorCode = $result['response_code'];
+                        if ($errorCode === 'DP00900001007') {
+                            $errorMessage .= ' - Solde insuffisant dans le wallet Partner';
+                        } elseif ($errorCode === 'DP00900001019' || $errorCode === 'DP00800001010') {
+                            $errorMessage .= ' - Le destinataire est barré ou non autorisé';
+                        } elseif ($errorCode === 'DP00900001012') {
+                            $errorMessage .= ' - Numéro de téléphone invalide ou non enregistré';
+                        } elseif ($errorCode === 'DP00900001003' || $errorCode === 'DP00900001004') {
+                            $errorMessage .= ' - Montant hors limites autorisées';
+                        } elseif ($errorCode === 'DP00800001024') {
+                            $errorMessage .= ' - Timeout: La transaction a expiré';
+                        }
+                    }
+                    
+                    return back()->with('error', $errorMessage);
                 }
             } else {
                 // Pour MTN ou autres méthodes (simulation)
@@ -275,6 +356,23 @@ class WithdrawalController extends Controller
             $isDbError = str_contains($e->getMessage(), 'MySQL server has gone away') || 
                         str_contains($e->getMessage(), '2006');
             
+            // Essayer de récupérer le résultat d'Airtel si disponible dans l'exception
+            $airtelResult = null;
+            if (method_exists($e, 'getResult') && $e->getResult()) {
+                $airtelResult = $e->getResult();
+            }
+            
+            // Logger l'exception avec toutes les informations disponibles
+            Log::error('Exception lors du traitement du retrait Airtel Money', [
+                'withdrawal_id' => $withdrawal->id,
+                'phone' => $withdrawal->phone_number,
+                'amount' => $withdrawal->amount,
+                'exception_message' => $e->getMessage(),
+                'exception_trace' => $e->getTraceAsString(),
+                'airtel_result' => $airtelResult,
+                'is_db_error' => $isDbError,
+            ]);
+            
             try {
                 if ($isDbError) {
                     // Reconnecter à la base de données
@@ -301,10 +399,25 @@ class WithdrawalController extends Controller
                 // Recharger le modèle pour s'assurer qu'on a la dernière version
                 $withdrawal->refresh();
                 
-                // Mettre à jour le statut
+                // Préparer les détails avec la réponse Airtel si disponible
+                $details = [
+                    'processed_by' => auth()->user()->name ?? 'System',
+                    'error_at' => now()->toISOString(),
+                    'exception_message' => $e->getMessage(),
+                ];
+                
+                if ($airtelResult) {
+                    $details['airtel_response'] = $airtelResult;
+                    if (isset($airtelResult['raw_response'])) {
+                        $details['airtel_raw_response'] = $airtelResult['raw_response'];
+                    }
+                }
+                
+                // Mettre à jour le statut avec les détails complets
                 $withdrawal->update([
                     'status' => 'rejected',
                     'rejection_reason' => 'Erreur technique: ' . $e->getMessage(),
+                    'details' => $details,
                 ]);
             } catch (\Exception $updateException) {
                 // Si la mise à jour échoue aussi, logger l'erreur
@@ -312,12 +425,30 @@ class WithdrawalController extends Controller
                     'withdrawal_id' => $withdrawal->id,
                     'original_error' => $e->getMessage(),
                     'update_error' => $updateException->getMessage(),
+                    'airtel_result' => $airtelResult,
                 ]);
             }
 
+            // Message d'erreur pour les exceptions
             $errorMessage = $isDbError 
                 ? 'Erreur de connexion à la base de données. Veuillez réessayer.'
                 : 'Erreur lors du traitement: ' . $e->getMessage();
+            
+            // Identifier le type d'erreur selon le message
+            $exceptionMessage = $e->getMessage();
+            if (str_contains($exceptionMessage, 'zéro') || str_contains($exceptionMessage, 'zero')) {
+                $errorMessage .= ' - Le montant ne peut pas être zéro';
+            } elseif (str_contains($exceptionMessage, 'négatif') || str_contains($exceptionMessage, 'negative')) {
+                $errorMessage .= ' - Le montant ne peut pas être négatif';
+            } elseif (str_contains($exceptionMessage, 'inférieur') || str_contains($exceptionMessage, 'minimum')) {
+                $errorMessage .= ' - Le montant est inférieur au minimum autorisé';
+            } elseif (str_contains($exceptionMessage, 'dépasse') || str_contains($exceptionMessage, 'maximum')) {
+                $errorMessage .= ' - Le montant dépasse le maximum autorisé';
+            } elseif (str_contains($exceptionMessage, 'barré') || str_contains($exceptionMessage, 'barred')) {
+                $errorMessage .= ' - Le destinataire est barré';
+            } elseif (str_contains($exceptionMessage, 'enregistré') || str_contains($exceptionMessage, 'registered')) {
+                $errorMessage .= ' - Le wallet n\'est pas enregistré sur Airtel Money';
+            }
                 
             return back()->with('error', $errorMessage);
         }

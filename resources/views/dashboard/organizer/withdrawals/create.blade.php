@@ -67,12 +67,21 @@
                         = Solde disponible ({{ number_format($availableBalance, 0, ',', ' ') }} FCFA)
                     </div>
 
-                    @if($availableBalance < 1000)
+                    @if($availableBalance < 100)
                         <div class="alert alert-warning">
                             <i class="fas fa-exclamation-triangle me-2"></i>
-                            Le montant minimum pour effectuer un retrait est de 1 000 FCFA.
+                            Le montant minimum pour effectuer un retrait est de 100 FCFA.
                         </div>
                     @else
+                        @if($availableBalance > 50000000)
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Note importante :</strong> Votre solde disponible est de {{ number_format($availableBalance, 0, ',', ' ') }} FCFA. 
+                                La limite maximale par transaction est de 50 000 000 FCFA. 
+                                Vous devrez effectuer plusieurs retraits pour retirer tout votre solde.
+                            </div>
+                        @endif
+                        
                         <form method="POST" action="{{ route('organizer.withdrawals.store') }}">
                             @csrf
 
@@ -86,8 +95,8 @@
                                            class="form-control @error('amount') is-invalid @enderror" 
                                            id="amount" 
                                            name="amount" 
-                                           min="1000"
-                                           max="{{ $availableBalance }}"
+                                           min="100"
+                                           max="{{ $maxWithdrawableAmount }}"
                                            value="{{ old('amount') }}"
                                            placeholder="Entrez le montant"
                                            required>
@@ -97,7 +106,10 @@
                                     @enderror
                                 </div>
                                 <div class="form-text">
-                                    Montant minimum : 1 000 FCFA | Maximum : {{ number_format($availableBalance, 0, ',', ' ') }} FCFA
+                                    Montant minimum : 100 FCFA | Maximum : {{ number_format($maxWithdrawableAmount, 0, ',', ' ') }} FCFA
+                                    @if($availableBalance > 50000000)
+                                        <br><small class="text-muted">(Limite système: 50 000 000 FCFA par transaction. Solde total disponible: {{ number_format($availableBalance, 0, ',', ' ') }} FCFA)</small>
+                                    @endif
                                 </div>
                             </div>
 

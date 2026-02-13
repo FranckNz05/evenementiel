@@ -81,7 +81,21 @@ class AdminUserController extends Controller
             // Ajouter le nombre d'achats pour chaque utilisateur
             $users = $query->withCount(['orders as total_purchases' => function($query) {
                 $query->where('statut', 'payé');
-            }])->paginate(10);
+            }])->withCount('tickets as tickets_count')->paginate(10);
+            
+            // Ajouter le nombre d'événements pour chaque utilisateur
+            foreach ($users as $user) {
+                try {
+                    $user->load('organizer');
+                    if ($user->organizer) {
+                        $user->events_count = $user->organizer->events()->count();
+                    } else {
+                        $user->events_count = 0;
+                    }
+                } catch (\Exception $e) {
+                    $user->events_count = 0;
+                }
+            }
 
             // Récupérer les demandes d'organisateur en attente avec pagination
             $organizerRequests = OrganizerRequest::with('user')
@@ -110,7 +124,7 @@ class AdminUserController extends Controller
             ]);
 
             return view('dashboard.admin.users.index', [
-                'users' => collect(),
+                'users' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10),
                 'roles' => Role::all(),
                 'organizerRequests' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10),
                 'influencerRequests' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10),
@@ -230,7 +244,3 @@ class AdminUserController extends Controller
         }
     }
 }
-
-
-
-

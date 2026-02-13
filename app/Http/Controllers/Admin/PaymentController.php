@@ -54,24 +54,31 @@ class PaymentController extends Controller
         // Statistiques générales
         $totalPayments = Payment::count();
         
-        // Utiliser whereIn pour gérer les variations de casse et d'espacement
-        // Les statuts peuvent être stockés avec différentes casses dans la base
-        $paidPayments = Payment::whereIn('statut', ['payé', 'Payé', 'PAYÉ', Payment::STATUS_PAID])->count();
-        $pendingPayments = Payment::whereIn('statut', ['en attente', 'En attente', 'EN ATTENTE', 'en_attente', Payment::STATUS_PENDING])->count();
-        $totalRevenue = Payment::whereIn('statut', ['payé', 'Payé', 'PAYÉ', Payment::STATUS_PAID])->sum('montant') ?? 0;
+        // Récupérer tous les statuts distincts pour debug
+        $distinctStatuses = Payment::select('statut')->distinct()->pluck('statut')->toArray();
         
-        // Debug temporaire pour identifier le problème
-        if ($totalPayments > 0 && ($paidPayments == 0 || $totalRevenue == 0)) {
-            $samplePayments = Payment::select('id', 'statut', 'montant')->take(10)->get();
-            Log::warning('Statistiques paiements - valeurs suspectes', [
+        // Utiliser whereIn pour gérer les variantes de casse possibles
+        $paidStatuses = [Payment::STATUS_PAID, 'Payé', 'PAYÉ'];
+        $pendingStatuses = [Payment::STATUS_PENDING, 'En attente', 'EN ATTENTE'];
+        
+        $paidPayments = Payment::whereIn('statut', $paidStatuses)->count();
+        $pendingPayments = Payment::whereIn('statut', $pendingStatuses)->count();
+        $totalRevenue = Payment::whereIn('statut', $paidStatuses)->sum('montant') ?? 0;
+        
+        // Conversion en float pour éviter les problèmes de type
+        $totalRevenue = (float) $totalRevenue;
+        
+        // Debug si aucune donnée trouvée
+        if ($totalPayments > 0 && $totalRevenue == 0) {
+            Log::info('Statistiques paiements - Debug', [
                 'total_payments' => $totalPayments,
                 'paid_count' => $paidPayments,
                 'pending_count' => $pendingPayments,
                 'total_revenue' => $totalRevenue,
+                'distinct_statuses' => $distinctStatuses,
                 'status_paid_const' => Payment::STATUS_PAID,
                 'status_pending_const' => Payment::STATUS_PENDING,
-                'sample_payments' => $samplePayments->toArray(),
-                'distinct_statuses' => Payment::select('statut')->distinct()->pluck('statut')->toArray()
+                'sample_payments' => Payment::select('id', 'statut', 'montant')->take(5)->get()->toArray()
             ]);
         }
 
@@ -80,31 +87,42 @@ class PaymentController extends Controller
         $paymentTrendsData = $this->getPaymentTrendsData();
 
         // Top événements par revenus
-        // Utiliser whereIn pour gérer les variations de casse
-        $topEventsQuery = Payment::whereIn('statut', ['payé', 'Payé', 'PAYÉ', Payment::STATUS_PAID])
+        $topEventsData = Payment::whereIn('statut', $paidStatuses)
             ->whereNotNull('evenement_id')
             ->select('evenement_id', \DB::raw('SUM(montant) as total_revenue'), \DB::raw('COUNT(*) as payment_count'))
             ->groupBy('evenement_id')
             ->orderBy('total_revenue', 'desc')
-            ->take(5);
+            ->take(5)
+            ->get();
         
-        $topEvents = $topEventsQuery->get()->map(function($item) {
-            $item->event = \App\Models\Event::find($item->evenement_id);
+        // Charger les événements en une seule requête
+        $eventIds = $topEventsData->pluck('evenement_id')->toArray();
+        $events = \App\Models\Event::whereIn('id', $eventIds)->get()->keyBy('id');
+        
+        $topEvents = $topEventsData->map(function($item) use ($events) {
+            $item->event = $events->get($item->evenement_id);
+            $item->total_revenue = (float) $item->total_revenue; // Conversion en float
             return $item;
         })->filter(function($item) {
             return $item->event !== null; // Filtrer les événements supprimés
         });
 
         // Top utilisateurs par revenus
-        $topUsersQuery = Payment::whereIn('statut', ['payé', 'Payé', 'PAYÉ', Payment::STATUS_PAID])
+        $topUsersData = Payment::whereIn('statut', $paidStatuses)
             ->whereNotNull('user_id')
             ->select('user_id', \DB::raw('SUM(montant) as total_spent'), \DB::raw('COUNT(*) as payment_count'))
             ->groupBy('user_id')
             ->orderBy('total_spent', 'desc')
-            ->take(5);
+            ->take(5)
+            ->get();
         
-        $topUsers = $topUsersQuery->get()->map(function($item) {
-            $item->user = \App\Models\User::find($item->user_id);
+        // Charger les utilisateurs en une seule requête
+        $userIds = $topUsersData->pluck('user_id')->toArray();
+        $users = \App\Models\User::whereIn('id', $userIds)->get()->keyBy('id');
+        
+        $topUsers = $topUsersData->map(function($item) use ($users) {
+            $item->user = $users->get($item->user_id);
+            $item->total_spent = (float) $item->total_spent; // Conversion en float
             return $item;
         })->filter(function($item) {
             return $item->user !== null; // Filtrer les utilisateurs supprimés
@@ -204,7 +222,8 @@ class PaymentController extends Controller
     public function getPaymentMethodsData()
     {
         // Récupérer les paiements groupés par mode de paiement
-        $paymentMethods = Payment::whereIn('statut', ['payé', 'Payé', 'PAYÉ', Payment::STATUS_PAID])
+        $paidStatuses = [Payment::STATUS_PAID, 'Payé', 'PAYÉ'];
+        $paymentMethods = Payment::whereIn('statut', $paidStatuses)
             ->select('methode_paiement', \DB::raw('COUNT(*) as total'))
             ->groupBy('methode_paiement')
             ->get();
@@ -255,7 +274,8 @@ class PaymentController extends Controller
     public function getPaymentTrendsData()
     {
         // Récupérer les paiements des 7 derniers jours
-        $paymentTrends = Payment::whereIn('statut', ['payé', 'Payé', 'PAYÉ', Payment::STATUS_PAID])
+        $paidStatuses = [Payment::STATUS_PAID, 'Payé', 'PAYÉ'];
+        $paymentTrends = Payment::whereIn('statut', $paidStatuses)
             ->where('created_at', '>=', now()->subDays(7))
             ->select(\DB::raw('DATE(created_at) as date'), \DB::raw('SUM(montant) as total'))
             ->groupBy('date')

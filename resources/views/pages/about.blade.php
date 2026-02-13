@@ -1,147 +1,64 @@
 @extends('layouts.app')
 
+@section('title', 'À propos de MokiliEvent')
+
 @section('content')
-<!-- Page Header Start -->
-<div class="container-fluid py-5 mb-5 hero-header">
-    <div class="container py-5">
-        <div class="row g-5 align-items-center">
-            <div class="col-md-12">
-                <h1 class="mb-4 display-3 text-white">À Propos de MokiliEvent</h1>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- Page Header End -->
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h1 class="mb-4 text-bleu-nuit">À propos de MokiliEvent</h1>
+            
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h2 class="h4 mb-3">Notre Mission</h2>
+                    <p class="mb-4">
+                        MokiliEvent est une plateforme dédiée à la promotion et à la gestion d'événements en République du Congo. 
+                        Notre mission est de faciliter l'organisation et la participation aux événements culturels, sportifs, 
+                        professionnels et sociaux à travers le pays.
+                    </p>
 
-<!-- About Start -->
-<div class="container-fluid py-5">
-    <div class="container">
-        <div class="row g-5 align-items-center">
-            <div class="col-lg-6">
-                <div class="rounded overflow-hidden">
-                    <img src="{{ asset('images/about.jpg') }}" class="img-fluid" alt="À propos de MokiliEvent">
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <h1 class="display-5 mb-4">La Référence des Événements au Congo</h1>
-                <p class="mb-4">MokiliEvent est la première plateforme d'événements au Congo-Brazzaville, facilitant la découverte et la participation aux meilleurs événements du pays.</p>
-                <div class="row g-4 mb-4">
-                    <div class="col-sm-6">
-                        <div class="d-flex align-items-center">
-                            <i class="fa fa-users fa-2x text-primary me-3"></i>
-                            <h5 class="mb-0">Communauté Active</h5>
-                        </div>
-                    </div>
-                    <div class="col-sm-6">
-                        <div class="d-flex align-items-center">
-                            <i class="fa fa-check fa-2x text-primary me-3"></i>
-                            <h5 class="mb-0">Événements Vérifiés</h5>
-                        </div>
-                    </div>
-                </div>
-                <p class="mb-4">Notre mission est de connecter les organisateurs d'événements avec leur public cible, tout en offrant une expérience utilisateur exceptionnelle.</p>
-                <div class="row g-4">
-                    <div class="col-sm-6">
-                        <div class="d-flex align-items-center">
-                            <i class="fa fa-shield-alt fa-2x text-primary me-3"></i>
-                            <h5 class="mb-0">Paiements Sécurisés</h5>
-                        </div>
-                    </div>
-                    <div class="col-sm-6">
-                        <div class="d-flex align-items-center">
-                            <i class="fa fa-headset fa-2x text-primary me-3"></i>
-                            <h5 class="mb-0">Support 24/7</h5>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- About End -->
+                    <h2 class="h4 mb-3">Notre Vision</h2>
+                    <p class="mb-4">
+                        Nous aspirons à devenir la référence en matière de gestion d'événements en RDC, 
+                        en offrant une plateforme innovante qui connecte les organisateurs d'événements 
+                        avec leur public, tout en simplifiant le processus de billetterie et de gestion.
+                    </p>
 
-<!-- Team Start -->
-<div class="container-fluid py-5">
-    <div class="container">
-        <div class="text-center mx-auto mb-5" style="max-width: 600px;">
-            <h1 class="display-5 mb-0">Notre Équipe</h1>
-            <hr class="w-25 mx-auto bg-primary">
-        </div>
-        <div class="row g-4">
-            <div class="col-lg-3 col-md-6">
-                <div class="team-item">
-                    <div class="position-relative overflow-hidden">
-                        <img class="img-fluid w-100" src="{{ asset('images/team-1.jpg') }}" alt="">
-                    </div>
-                    <div class="team-text">
-                        <div class="bg-light">
-                            <h5 class="fw-bold mb-0">Jean Doe</h5>
-                            <small>CEO & Fondateur</small>
-                        </div>
-                        <div class="bg-primary">
-                            <a class="btn btn-square mx-1" href="#"><i class="fab fa-facebook-f"></i></a>
-                            <a class="btn btn-square mx-1" href="#"><i class="fab fa-twitter"></i></a>
-                            <a class="btn btn-square mx-1" href="#"><i class="fab fa-instagram"></i></a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="team-item">
-                    <div class="position-relative overflow-hidden">
-                        <img class="img-fluid w-100" src="{{ asset('images/team-2.jpg') }}" alt="">
-                    </div>
-                    <div class="team-text">
-                        <div class="bg-light">
-                            <h5 class="fw-bold mb-0">Marie Doe</h5>
-                            <small>Directrice Marketing</small>
-                        </div>
-                        <div class="bg-primary">
-                            <a class="btn btn-square mx-1" href="#"><i class="fab fa-facebook-f"></i></a>
-                            <a class="btn btn-square mx-1" href="#"><i class="fab fa-twitter"></i></a>
-                            <a class="btn btn-square mx-1" href="#"><i class="fab fa-instagram"></i></a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="team-item">
-                    <div class="position-relative overflow-hidden">
-                        <img class="img-fluid w-100" src="{{ asset('images/team-3.jpg') }}" alt="">
-                    </div>
-                    <div class="team-text">
-                        <div class="bg-light">
-                            <h5 class="fw-bold mb-0">Pierre Doe</h5>
-                            <small>Développeur</small>
-                        </div>
-                        <div class="bg-primary">
-                            <a class="btn btn-square mx-1" href="#"><i class="fab fa-facebook-f"></i></a>
-                            <a class="btn btn-square mx-1" href="#"><i class="fab fa-twitter"></i></a>
-                            <a class="btn btn-square mx-1" href="#"><i class="fab fa-instagram"></i></a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="team-item">
-                    <div class="position-relative overflow-hidden">
-                        <img class="img-fluid w-100" src="{{ asset('images/team-4.jpg') }}" alt="">
-                    </div>
-                    <div class="team-text">
-                        <div class="bg-light">
-                            <h5 class="fw-bold mb-0">Sophie Doe</h5>
-                            <small>Support Client</small>
-                        </div>
-                        <div class="bg-primary">
-                            <a class="btn btn-square mx-1" href="#"><i class="fab fa-facebook-f"></i></a>
-                            <a class="btn btn-square mx-1" href="#"><i class="fab fa-twitter"></i></a>
-                            <a class="btn btn-square mx-1" href="#"><i class="fab fa-instagram"></i></a>
-                        </div>
+                    <h2 class="h4 mb-3">Nos Valeurs</h2>
+                    <ul class="list-unstyled mb-4">
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-blanc-or me-2"></i>
+                            Innovation et excellence dans le service
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-blanc-or me-2"></i>
+                            Accessibilité et facilité d'utilisation
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-blanc-or me-2"></i>
+                            Sécurité et fiabilité des transactions
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-blanc-or me-2"></i>
+                            Support client réactif et professionnel
+                        </li>
+                    </ul>
+
+                    <h2 class="h4 mb-3">Notre Équipe</h2>
+                    <p class="mb-4">
+                        Notre équipe est composée de professionnels passionnés par les événements et les nouvelles technologies. 
+                        Nous travaillons ensemble pour offrir la meilleure expérience possible à nos utilisateurs, 
+                        qu'il s'agisse des organisateurs d'événements ou des participants.
+                    </p>
+
+                    <div class="text-center mt-4">
+                        <a href="{{ route('contact') }}" class="btn btn-primary">
+                            <i class="fas fa-envelope me-2"></i>Contactez-nous
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-<!-- Team End -->
 @endsection

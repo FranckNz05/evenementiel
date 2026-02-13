@@ -60,8 +60,8 @@
 
         <!-- Pagination -->
         <div class="row mt-4">
-            <div class="col-12 d-flex justify-content-center">
-                {{ $events->links() }}
+            <div class="col-12">
+                <x-pagination :paginator="$events" />
             </div>
         </div>
     </div>

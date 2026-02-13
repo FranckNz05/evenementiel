@@ -1,27 +1,33 @@
-<div class="modern-card">
-    <div class="card-header-modern">
-        <div class="card-title">
-            <i class="fas fa-ticket-alt"></i>
-            Gestion des Tickets
-        </div>
-        <div class="d-flex gap-2">
-            <div class="input-group">
-                <input type="text" class="form-control form-input-modern" id="ticketSearch" placeholder="Rechercher par code..." style="padding: 0.5rem 1rem;">
-                <button class="btn btn-primary" type="button" id="searchTicketBtn">
-                    <i class="fas fa-search"></i>
-                </button>
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-ticket-alt me-1"></i>
+                Gestion des Tickets
+            </h5>
+            <div class="d-flex gap-2">
+                <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Retour au tableau de bord
+                </a>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="ticketSearch" placeholder="Rechercher par code...">
+                    <button class="btn btn-outline-secondary" type="button" id="searchTicketBtn">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                <select class="form-select" id="ticketSort">
+                    <option value="">Trier par...</option>
+                    <option value="date">Date d'achat</option>
+                    <option value="price">Prix</option>
+                    <option value="event">Événement</option>
+                </select>
             </div>
-            <select class="form-select form-select-modern" id="ticketSort" style="padding: 0.5rem 2rem 0.5rem 1rem;">
-                <option value="">Trier par...</option>
-                <option value="date">Date d'achat</option>
-                <option value="price">Prix</option>
-                <option value="event">Événement</option>
-            </select>
         </div>
     </div>
-    <div class="card-body-modern p-4">
-        <div class="table-container">
-            <table class="modern-table">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
                 <thead>
                     <tr>
                         <th>Code</th>
@@ -38,7 +44,7 @@
                 </tbody>
             </table>
         </div>
-        <div id="ticketsPagination" class="pagination-container">
+        <div id="ticketsPagination" class="d-flex justify-content-center mt-3">
             <!-- Pagination loaded dynamically -->
         </div>
     </div>
@@ -49,31 +55,31 @@
 let currentTicketPage = 1;
 
 function loadTickets(page = 1, search = '', sort = '') {
-    $.get(`{{ route('admin.tickets') }}?page=${page}&search=${search}&sort=${sort}`, function(response) {
+    $.get(`{{ url('admin/tickets') }}?page=${page}&search=${search}&sort=${sort}`, function(response) {
         $('#ticketsTableBody').empty();
-        
+
         response.data.forEach(ticket => {
-            const statusBadge = ticket.order.status === 'completed' 
-                ? '<span class="modern-badge badge-success">Payé</span>' 
-                : '<span class="modern-badge badge-warning">' + ticket.order.status + '</span>';
-                
             $('#ticketsTableBody').append(`
                 <tr>
-                    <td><div class="fw-bold text-dark font-monospace">${ticket.unique_code}</div></td>
+                    <td>${ticket.ticket_code || 'N/A'}</td>
                     <td>${ticket.event.title}</td>
                     <td>${ticket.user.name}</td>
-                    <td><div class="fw-bold">${new Intl.NumberFormat('fr-FR').format(ticket.price)} FCFA</div></td>
+                    <td>${new Intl.NumberFormat('fr-FR').format(ticket.price)} FCFA</td>
                     <td>${new Date(ticket.created_at).toLocaleDateString()}</td>
-                    <td>${statusBadge}</td>
                     <td>
-                        <div class="btn-group-modern" role="group">
-                            <button class="btn btn-sm btn-info-modern view-ticket" data-id="${ticket.id}">
+                        <span class="badge bg-${ticket.statut === 'disponible' ? 'success' : 'warning'}">
+                            ${ticket.statut || 'N/A'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-primary btn-sm view-ticket" data-id="${ticket.id}">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button class="btn btn-sm btn-warning-modern edit-ticket" data-id="${ticket.id}">
+                            <button class="btn btn-warning btn-sm edit-ticket" data-id="${ticket.id}">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn btn-sm btn-danger-modern delete-ticket" data-id="${ticket.id}">
+                            <button class="btn btn-danger btn-sm delete-ticket" data-id="${ticket.id}">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -92,12 +98,12 @@ function updateTicketPagination(response) {
     pagination.empty();
 
     if (response.last_page > 1) {
-        let paginationHtml = '<ul class="pagination-modern">';
-        
+        let paginationHtml = '<ul class="pagination">';
+
         // Previous page
         paginationHtml += `
             <li class="page-item ${response.current_page === 1 ? 'disabled' : ''}">
-                <a class="page-link" href="#" data-page="${response.current_page - 1}"><i class="fas fa-chevron-left me-1"></i> Précédent</a>
+                <a class="page-link" href="#" data-page="${response.current_page - 1}">Précédent</a>
             </li>
         `;
 
@@ -113,7 +119,7 @@ function updateTicketPagination(response) {
         // Next page
         paginationHtml += `
             <li class="page-item ${response.current_page === response.last_page ? 'disabled' : ''}">
-                <a class="page-link" href="#" data-page="${response.current_page + 1}">Suivant <i class="fas fa-chevron-right ms-1"></i></a>
+                <a class="page-link" href="#" data-page="${response.current_page + 1}">Suivant</a>
             </li>
         `;
 

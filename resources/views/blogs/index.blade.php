@@ -1,236 +1,175 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
 
-@section('title', 'Blog')
+@section('title', 'Mes articles')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <!-- Sidebar gauche -->
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Catégories</h5>
-                    <div class="list-group">
-                        @foreach($categories as $category)
-                            <a href="{{ route('blogs.category', $category->slug) }}"
-                               class="list-group-item list-group-item-action {{ request()->route('category') == $category->slug ? 'active' : '' }}">
-                                {{ $category->name }}
-                            </a>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
+<div class="container-fluid dashboard-container">
+    {{-- En-tête de page --}}
+    <x-page-header 
+        title="Mes articles de blog" 
+        icon="fas fa-blog"
+        subtitle="Gérez tous vos articles et publications">
+        <x-slot:actions>
+            @auth
+                @if(auth()->user()->hasRole([2, 3]))
+                    <a href="{{ route('blogs.create') }}" class="modern-btn btn-primary-modern">
+                        <i class="fas fa-plus"></i>
+                        Créer un article
+                    </a>
+                @endif
+            @endauth
+        </x-slot:actions>
+    </x-page-header>
+
+    {{-- Messages Flash --}}
+    @if(session('success'))
+        <div class="modern-alert alert-success-modern fade-in">
+            <i class="fas fa-check-circle"></i>
+            <span>{{ session('success') }}</span>
         </div>
+    @endif
 
-        <!-- Contenu principal -->
-        <div class="col-md-6">
-            @foreach($blogs as $blog)
-                <div class="card mb-3 blog-card">
-                    <div class="card-body">
-                        <!-- En-tête du blog -->
-                        <div class="d-flex align-items-center mb-3">
-                            @if(isset($blog->user) && isset($blog->user->organizer))
-                                <img src="{{ $blog->user->organizer->logo ? asset('storage/' . $blog->user->organizer->logo) : asset('images/default-avatar.png') }}"
-                                     class="rounded-circle me-2"
-                                     width="40"
-                                     height="40"
-                                     alt="{{ $blog->user->organizer->company_name ?? 'Organisateur' }}">
-                                <div>
-                                    <h6 class="mb-0">{{ $blog->user->organizer->company_name ?? $blog->user->name }}</h6>
-                                    <small class="text-muted">{{ $blog->created_at->diffForHumans() }}</small>
-                                </div>
-                            @else
-                                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
-                                    <i class="fas fa-user text-secondary"></i>
-                                </div>
-                                <div>
-                                    <h6 class="mb-0">{{ $blog->user->name ?? 'Utilisateur' }}</h6>
-                                    <small class="text-muted">{{ $blog->created_at->diffForHumans() }}</small>
-                                </div>
-                            @endif
-                        </div>
+    @if(session('error'))
+        <div class="modern-alert alert-danger-modern fade-in">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>{{ session('error') }}</span>
+        </div>
+    @endif
 
-                        <!-- Contenu du blog -->
-                        <div class="blog-content">
-                            <h5 class="card-title">{{ $blog->title }}</h5>
-                            <p class="card-text">{{ $blog->content }}</p>
-
-                            @if($blog->image)
-                                <img src="{{ asset('storage/' . $blog->image) }}"
-                                     class="img-fluid rounded mb-3"
-                                     alt="{{ $blog->title }}">
-                            @endif
-                        </div>
-
-                        <!-- Actions -->
-                        <div class="d-flex justify-content-between align-items-center mt-3">
-                            <div class="d-flex gap-3">
-                                <!-- Commentaires -->
-                                <button class="btn btn-link text-muted p-0"
-                                        data-bs-toggle="collapse"
-                                        data-bs-target="#comments-{{ $blog->id }}">
-                                    <i class="fas fa-comment"></i>
-                                    <span class="ms-1">{{ $blog->comments_count }}</span>
-                                </button>
-
-                                <!-- J'aime -->
-                                <button class="btn btn-link text-muted p-0 like-btn"
-                                        data-blog-id="{{ $blog->id }}">
-                                    <i class="fas fa-heart {{ auth()->check() && isset($blog->likes) && $blog->likes->where('user_id', auth()->id())->count() ? 'text-danger' : '' }}"></i>
-                                    <span class="ms-1 likes-count">{{ isset($blog->likes) ? $blog->likes->count() : 0 }}</span>
-                                </button>
-
-                                <!-- Partager -->
-                                <button class="btn btn-link text-muted p-0 share-btn"
-                                        data-blog-id="{{ $blog->id }}">
-                                    <i class="fas fa-share"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Section commentaires -->
-                        <div class="collapse mt-3" id="comments-{{ $blog->id }}">
-                            <div class="card card-body">
-                                @auth
-                                    <form action="{{ route('blogs.comment', $blog->id) }}" method="POST" class="mb-3">
-                                        @csrf
-                                        <div class="form-group">
-                                            <textarea name="content" class="form-control" rows="2" placeholder="Écrire un commentaire..."></textarea>
-                                        </div>
-                                        <button type="submit" class="btn btn-primary btn-sm mt-2">Commenter</button>
-                                    </form>
-                                @endauth
-
-                                <div class="comments-list">
-                                    @if(isset($blog->comments))
-                                        @foreach($blog->comments()->latest()->take(5)->get() as $comment)
-                                            <div class="d-flex mb-2">
-                                                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
-                                                    <i class="fas fa-user text-secondary" style="font-size: 12px;"></i>
-                                                </div>
-                                                <div class="flex-grow-1">
-                                                    <div class="bg-light rounded p-2">
-                                                        <strong>{{ $comment->user->name ?? 'Utilisateur' }}</strong>
-                                                        <p class="mb-0">{{ $comment->content }}</p>
-                                                    </div>
-                                                    <small class="text-muted">{{ $comment->created_at->diffForHumans() }}</small>
-                                                </div>
-                                            </div>
-                                        @endforeach
+    {{-- Contenu principal --}}
+    <x-content-section title="Liste des articles" icon="fas fa-list">
+        @if($blogs->count() > 0)
+            <div class="table-container">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">Image</th>
+                            <th>Titre</th>
+                            <th style="width: 120px;">Date</th>
+                            <th style="width: 100px;">Vues</th>
+                            <th style="width: 180px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($blogs as $blog)
+                            <tr>
+                                <td>
+                                    @if($blog->image_path)
+                                        <img src="{{ Storage::url($blog->image_path) }}" alt="{{ $blog->title }}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
                                     @else
-                                        <p class="text-muted">Aucun commentaire pour le moment.</p>
+                                        <div style="width: 60px; height: 60px; background: var(--gray-100); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas fa-image" style="color: var(--gray-400);"></i>
+                                        </div>
                                     @endif
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endforeach
-
-            <!-- Pagination -->
-            <div class="d-flex justify-content-center">
-                {{ $blogs->links() }}
+                                </td>
+                                <td>
+                                    <strong style="color: var(--bleu-nuit);">{{ $blog->title }}</strong>
+                                    <p class="mb-0 text-muted small">{{ Str::limit(strip_tags($blog->content), 100) }}</p>
+                                </td>
+                                <td>{{ $blog->created_at->format('d/m/Y') }}</td>
+                                <td>
+                                    <span class="modern-badge badge-info">
+                                        <i class="fas fa-eye"></i>
+                                        {{ $blog->views ?? 0 }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group-modern">
+                                        <button type="button" class="modern-btn btn-sm-modern btn-info-modern" data-bs-toggle="modal" data-bs-target="#blogModal{{ $blog->id }}" title="Voir">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <a href="{{ route('blogs.edit', $blog) }}" class="modern-btn btn-sm-modern btn-warning-modern" title="Modifier">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form action="{{ route('blogs.destroy', $blog) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="modern-btn btn-sm-modern btn-danger-modern" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet article ?')" title="Supprimer">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
-        </div>
 
-        <!-- Sidebar droite -->
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Articles populaires</h5>
-                    @foreach($popularBlogs as $popularBlog)
-                        <div class="mb-3">
-                            <a href="#" class="text-decoration-none">
-                                <h6 class="mb-1">{{ $popularBlog->title }}</h6>
-                                <small class="text-muted">{{ $popularBlog->views_count }} vues</small>
-                            </a>
-                        </div>
-                    @endforeach
+            {{-- Pagination --}}
+            @if($blogs->hasPages())
+                <div class="pagination-container">
+                    {{ $blogs->links() }}
                 </div>
+            @endif
+        @else
+            <x-empty-state 
+                icon="fas fa-blog"
+                title="Aucun article pour le moment"
+                message="Vous n'avez pas encore créé d'article. Commencez par créer votre premier article pour partager vos idées et actualités !">
+                <x-slot:action>
+                    @auth
+                        @if(auth()->user()->hasRole([2, 3]))
+                            <a href="{{ route('blogs.create') }}" class="modern-btn btn-primary-modern">
+                                <i class="fas fa-plus"></i>
+                                Créer mon premier article
+                            </a>
+                        @endif
+                    @endauth
+                </x-slot:action>
+            </x-empty-state>
+        @endif
+    </x-content-section>
+</div>
+
+<!-- Modals pour afficher le contenu complet -->
+@foreach($blogs as $blog)
+<div class="modal fade modal-modern" id="blogModal{{ $blog->id }}" tabindex="-1" aria-labelledby="blogModalLabel{{ $blog->id }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="blogModalLabel{{ $blog->id }}">
+                    <i class="fas fa-blog"></i>
+                    {{ $blog->title }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @if($blog->image_path)
+                    <img class="img-fluid w-100 rounded mb-4" src="{{ Storage::url($blog->image_path) }}" alt="{{ $blog->title }}" style="border-radius: var(--radius-lg);">
+                @endif
+                <div class="d-flex gap-3 mb-3 text-muted small">
+                    <span><i class="fas fa-user me-1"></i>{{ optional(optional($blog->user)->organizer)->company_name ?? (optional($blog->user)->nom ?? 'Utilisateur') }}</span>
+                    <span><i class="fas fa-calendar me-1"></i>{{ $blog->created_at->format('d M Y') }}</span>
+                    <span><i class="fas fa-eye me-1"></i>{{ $blog->views ?? 0 }} vues</span>
+                </div>
+                <div class="blog-content">
+                    {!! sanitize_html($blog->content) !!}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="modern-btn btn-secondary-modern" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    Fermer
+                </button>
             </div>
         </div>
     </div>
 </div>
-
-@push('styles')
-<style>
-.blog-card {
-    transition: transform 0.2s;
-    border: none;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.blog-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-
-.btn-link {
-    text-decoration: none;
-    transition: color 0.2s;
-}
-
-.btn-link:hover {
-    color: #1da1f2 !important;
-}
-
-.like-btn.active i {
-    color: #e0245e;
-}
-
-.comments-list {
-    max-height: 300px;
-    overflow-y: auto;
-}
-</style>
-@endpush
+@endforeach
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Gestion des likes
-    document.querySelectorAll('.like-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const blogId = this.dataset.blogId;
-            const icon = this.querySelector('i');
-            const countSpan = this.querySelector('.likes-count');
-
-            fetch(`/blog/${blogId}/like`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    icon.classList.toggle('text-danger');
-                    countSpan.textContent = data.likes_count;
-                }
+    // Auto-hide alerts after 5 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
             });
-        });
+        }, 5000);
     });
-
-    // Gestion du partage
-    document.querySelectorAll('.share-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const blogId = this.dataset.blogId;
-            const url = window.location.origin + '/blog/' + blogId;
-
-            if (navigator.share) {
-                navigator.share({
-                    title: document.title,
-                    url: url
-                });
-            } else {
-                // Fallback pour les navigateurs qui ne supportent pas l'API Web Share
-                navigator.clipboard.writeText(url);
-                alert('Lien copié dans le presse-papiers !');
-            }
-        });
-    });
-});
 </script>
 @endpush
 @endsection

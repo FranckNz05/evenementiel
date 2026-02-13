@@ -6,29 +6,29 @@
             <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
-                
+
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Prénom</label>
-                        <input type="text" name="prenom" class="form-control" 
+                        <input type="text" name="prenom" class="form-control"
                                value="{{ auth()->user()->prenom }}" required>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Nom</label>
-                        <input type="text" name="nom" class="form-control" 
+                        <input type="text" name="nom" class="form-control"
                                value="{{ auth()->user()->nom }}" required>
                     </div>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Email</label>
-                    <input type="email" class="form-control" 
+                    <input type="email" class="form-control"
                            value="{{ auth()->user()->email }}" readonly>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Téléphone</label>
-                    <input type="tel" name="phone" class="form-control" 
+                    <input type="tel" name="phone" class="form-control"
                            value="{{ auth()->user()->phone }}">
                 </div>
 
@@ -36,7 +36,7 @@
                     <label class="form-label">Genre</label>
                     <select name="genre" class="form-select">
                         <option value="">Sélectionner</option>
-                        <option value="M" {{ auth()->user()->genre === 'M' ? 'selected' : '' }}>Masculin</option>
+                        <option value="M" {{ auth()->user()->genre === 'M' ? 'selected' : '' }}>Homme</option>
                         <option value="F" {{ auth()->user()->genre === 'F' ? 'selected' : '' }}>Féminin</option>
                     </select>
                 </div>
@@ -55,7 +55,7 @@
 
                 <div class="mb-3">
                     <label class="form-label">Photo de profil</label>
-                    <input type="file" name="profile_image" class="form-control" accept="image/*">
+                    <input type="file" name="profil_image" class="form-control" accept="image/*">
                 </div>
 
                 <button type="submit" class="btn btn-primary">Mettre à jour le profil</button>

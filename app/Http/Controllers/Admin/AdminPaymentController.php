@@ -40,35 +40,65 @@ class AdminPaymentController extends Controller
 
         $payments = $query->latest()->paginate(10);
         
-        // Calculer les statistiques
+        // Calculer les statistiques - Utiliser les constantes du modèle Payment
         $totalPayments = Payment::count();
-        $paidPayments = Payment::where('statut', 'paid')->count();
-        $totalRevenue = Payment::where('statut', 'paid')->sum('montant');
-        $pendingPayments = Payment::where('statut', 'pending')->count();
+        
+        // Utiliser whereIn pour gérer les variantes de casse possibles
+        $paidStatuses = [Payment::STATUS_PAID, 'Payé', 'PAYÉ'];
+        $pendingStatuses = [Payment::STATUS_PENDING, 'En attente', 'EN ATTENTE'];
+        
+        $paidPayments = Payment::whereIn('statut', $paidStatuses)->count();
+        $totalRevenue = Payment::whereIn('statut', $paidStatuses)->sum('montant') ?? 0;
+        $pendingPayments = Payment::whereIn('statut', $pendingStatuses)->count();
         $successRate = $totalPayments > 0 ? round(($paidPayments / $totalPayments) * 100, 1) : 0;
         
+        // Conversion en float pour éviter les problèmes de type
+        $totalRevenue = (float) $totalRevenue;
+        
         // Top 5 événements par revenus
-        $topEvents = Payment::where('statut', 'paid')
+        $topEventsData = Payment::whereIn('statut', $paidStatuses)
             ->whereNotNull('evenement_id')
             ->select('evenement_id', DB::raw('SUM(montant) as total_revenue'), DB::raw('COUNT(*) as payment_count'))
-            ->with('event')
             ->groupBy('evenement_id')
             ->orderByDesc('total_revenue')
             ->limit(5)
             ->get();
         
+        // Charger les événements en une seule requête
+        $eventIds = $topEventsData->pluck('evenement_id')->toArray();
+        $events = \App\Models\Event::whereIn('id', $eventIds)->get()->keyBy('id');
+        
+        $topEvents = $topEventsData->map(function($item) use ($events) {
+            $item->event = $events->get($item->evenement_id);
+            $item->total_revenue = (float) $item->total_revenue;
+            return $item;
+        })->filter(function($item) {
+            return $item->event !== null;
+        });
+        
         // Top 5 utilisateurs par dépenses
-        $topUsers = Payment::where('statut', 'paid')
+        $topUsersData = Payment::whereIn('statut', $paidStatuses)
             ->whereNotNull('user_id')
             ->select('user_id', DB::raw('SUM(montant) as total_spent'), DB::raw('COUNT(*) as payment_count'))
-            ->with('user')
             ->groupBy('user_id')
             ->orderByDesc('total_spent')
             ->limit(5)
             ->get();
         
+        // Charger les utilisateurs en une seule requête
+        $userIds = $topUsersData->pluck('user_id')->toArray();
+        $users = \App\Models\User::whereIn('id', $userIds)->get()->keyBy('id');
+        
+        $topUsers = $topUsersData->map(function($item) use ($users) {
+            $item->user = $users->get($item->user_id);
+            $item->total_spent = (float) $item->total_spent;
+            return $item;
+        })->filter(function($item) {
+            return $item->user !== null;
+        });
+        
         // Données pour le graphique des méthodes de paiement
-        $paymentMethods = Payment::where('statut', 'paid')
+        $paymentMethods = Payment::whereIn('statut', $paidStatuses)
             ->where('methode_paiement', 'NOT LIKE', '%simulation%')
             ->where('methode_paiement', 'NOT LIKE', '%Simulation%')
             ->select('methode_paiement', DB::raw('COUNT(*) as count'))
@@ -81,7 +111,7 @@ class AdminPaymentController extends Controller
         ];
         
         // Données pour le graphique des tendances (7 derniers jours)
-        $trends = Payment::where('statut', 'paid')
+        $trends = Payment::whereIn('statut', $paidStatuses)
             ->where('created_at', '>=', now()->subDays(7))
             ->select(DB::raw('DATE(created_at) as date'), DB::raw('SUM(montant) as total'))
             ->groupBy('date')
@@ -118,7 +148,7 @@ class AdminPaymentController extends Controller
     public function update(Request $request, Payment $payment)
     {
         $validated = $request->validate([
-            'statut' => 'required|in:pending,paid,failed,cancelled',
+            'statut' => 'required|in:' . Payment::STATUS_PENDING . ',' . Payment::STATUS_PAID . ',' . Payment::STATUS_FAILED . ',' . Payment::STATUS_CANCELLED,
             'note_admin' => 'nullable|string|max:255'
         ]);
 
@@ -127,7 +157,7 @@ class AdminPaymentController extends Controller
 
             $payment->update($validated);
 
-            if ($validated['statut'] === 'paid' && $payment->order) {
+            if ($validated['statut'] === Payment::STATUS_PAID && $payment->order) {
                 $payment->order->update(['statut' => 'payé']);
             }
 
@@ -148,7 +178,7 @@ class AdminPaymentController extends Controller
     public function destroy(Payment $payment)
     {
         try {
-            if ($payment->statut === 'paid') {
+            if ($payment->statut === Payment::STATUS_PAID) {
                 return redirect()->back()
                     ->with('error', 'Impossible de supprimer un paiement déjà effectué');
             }
@@ -199,11 +229,13 @@ class AdminPaymentController extends Controller
 
     public function statistics()
     {
+        $paidStatuses = [Payment::STATUS_PAID, 'Payé', 'PAYÉ'];
+        
         $stats = [
             'total_payments' => Payment::count(),
-            'successful_payments' => Payment::where('statut', 'paid')->count(),
-            'total_amount' => Payment::where('statut', 'paid')->sum('montant'),
-            'payment_methods' => Payment::where('statut', 'paid')
+            'successful_payments' => Payment::whereIn('statut', $paidStatuses)->count(),
+            'total_amount' => Payment::whereIn('statut', $paidStatuses)->sum('montant') ?? 0,
+            'payment_methods' => Payment::whereIn('statut', $paidStatuses)
                 ->select('methode_paiement', DB::raw('count(*) as total'))
                 ->groupBy('methode_paiement')
                 ->get()

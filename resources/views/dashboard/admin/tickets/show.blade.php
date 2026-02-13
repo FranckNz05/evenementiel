@@ -187,10 +187,12 @@
         ?? optional(optional($event)->user)->name
         ?? optional(optional($event)->user)->email
         ?? 'Organisateur non défini';
-    $clientName = optional($ticket->user)->full_name
-        ?? optional($ticket->user)->name
-        ?? optional($ticket->user)->email;
-    $clientEmail = optional($ticket->user)->email;
+    // Récupérer le client depuis la première commande associée au ticket
+    $firstOrder = $ticket->orders->first();
+    $clientName = optional($firstOrder)->user 
+        ? (optional($firstOrder->user)->full_name ?? optional($firstOrder->user)->name ?? optional($firstOrder->user)->email)
+        : 'N/A';
+    $clientEmail = optional($firstOrder)->user ? optional($firstOrder->user)->email : 'N/A';
     $ticketLabel = $ticket->nom ?? $ticket->ticket_type ?? 'Billet #' . $ticket->id;
     $validUntil = $ticket->valid_until ? $ticket->valid_until->format('d/m/Y H:i') : 'Non défini';
     $promotionPeriod = $ticket->promotion_start && $ticket->promotion_end

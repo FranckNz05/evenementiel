@@ -28,7 +28,7 @@
                     @endif
                     
                     <div class="d-flex mb-3">
-                        <small class="me-3"><i class="far fa-user text-primary me-2"></i>{{ $blog->user->organizer->company_name }}</small>
+                        <small class="me-3"><i class="far fa-user text-primary me-2"></i>{{ $blog->user->organizer->company_name ?? 'Auteur inconnu' }}</small>
                         <small class="me-3"><i class="far fa-calendar-alt text-primary me-2"></i>{{ $blog->created_at->format('d M Y') }}</small>
                         <small><i class="far fa-eye text-primary me-2"></i>{{ $blog->views }} Vues</small>
                     </div>
@@ -43,11 +43,11 @@
                     @endif
 
                     <div class="blog-content">
-                        {!! $blog->content !!}
+                        {!! sanitize_html($blog->content) !!}
                     </div>
 
                     @auth
-                        @if(auth()->user()->id === $blog->user_id || auth()->user()->hasRole('admin'))
+                        @if(auth()->user()->id === $blog->user_id || auth()->user()->hasRole(3))
                             <div class="mt-4">
                                 <a href="{{ route('blog.edit', $blog) }}" class="btn btn-primary me-2">Modifier</a>
                                 <form action="{{ route('blog.destroy', $blog) }}" method="POST" class="d-inline">
@@ -81,8 +81,16 @@
                     <div class="comments mt-4">
                         @forelse($blog->comments as $comment)
                             <div class="comment border-bottom pb-4 mb-4">
-                                <div class="d-flex mb-2">
-                                    <h6 class="me-3 mb-0">{{ $comment->user->name }}</h6>
+                                <div class="d-flex align-items-center mb-2">
+                                    <h6 class="me-2 mb-0">{{ $comment->user->name }}</h6>
+                                    @php($badge = $comment->user->badge_type ?? ($comment->user->badgeType ?? null))
+                                    @if(($comment->user->isOrganizer() ?? false))
+                                        <span class="ms-1" title="Organisateur" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#ffffff;"></span>
+                                    @elseif(($comment->user->isInfluencer() ?? false))
+                                        <span class="ms-1" title="Influenceur" style="color:#ffffff;">
+                                            <i class="fas fa-star"></i>
+                                        </span>
+                                    @endif
                                     <small><i class="far fa-calendar-alt text-primary me-2"></i>{{ $comment->created_at->format('d M Y') }}</small>
                                 </div>
                                 <p class="mb-0">{{ $comment->content }}</p>
@@ -105,7 +113,7 @@
                         <img class="img-fluid rounded" src="{{ asset('images/default-avatar.jpg') }}" style="width: 60px; height: 60px; object-fit: cover;" alt="Author">
                         <div class="ps-3">
                             <h6 class="text-primary mb-1">{{ $blog->user->name }}</h6>
-                            <small>{{ $blog->user->hasRole('organizer') ? 'Organisateur' : 'Membre' }}</small>
+                            <small>{{ $blog->user->hasRole(2) ? 'Organisateur' : 'Membre' }}</small>
                         </div>
                     </div>
                 </div>

@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Billets - Commande #{{ $order->id }}</title>
+    <title>Billets - reservation #{{ $order->id }}</title>
     <style>
         body {
             font-family: 'DejaVu Sans', sans-serif;
@@ -46,7 +46,7 @@
     </style>
 </head>
 <body>
-    <h1 style="text-align: center; margin-bottom: 30px;">Vos billets - Commande #{{ $order->id }}</h1>
+    <h1 style="text-align: center; margin-bottom: 30px;">Vos billets - reservation #{{ $order->id }}</h1>
 
     @foreach($order->tickets as $ticket)
     <div class="ticket">

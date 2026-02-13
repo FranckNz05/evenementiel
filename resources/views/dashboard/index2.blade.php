@@ -1,73 +1,41 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
+
+@section('title', 'Tableau de bord')
 
 @section('content')
 <div class="container py-5">
+    <!-- Profil -->
     <div class="row">
-        <!-- Menu latéral -->
-        <div class="col-lg-3">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-4">
-                        <img src="{{ auth()->user()->profile_image ? asset('storage/' . auth()->user()->profile_image) : asset('images/default-profile.jpg') }}" 
-                             alt="Profile" class="rounded-circle" style="width: 60px; height: 60px; object-fit: cover;">
-                        <div class="ms-3">
-                            <h5 class="mb-0">{{ auth()->user()->prenom }} {{ auth()->user()->nom }}</h5>
-                            <small class="text-muted">{{ auth()->user()->email }}</small>
-                        </div>
-                    </div>
-
-                    <div class="list-group">
-                        <a href="#profile" class="list-group-item list-group-item-action active" data-bs-toggle="list">
-                            <i class="fas fa-user me-2"></i> Profil
-                        </a>
-                        <a href="#reservations" class="list-group-item list-group-item-action" data-bs-toggle="list">
-                            <i class="fas fa-ticket-alt me-2"></i> Réservations
-                        </a>
-                        <a href="#payments" class="list-group-item list-group-item-action" data-bs-toggle="list">
-                            <i class="fas fa-credit-card me-2"></i> Paiements
-                        </a>
-                        <a href="#favorites" class="list-group-item list-group-item-action" data-bs-toggle="list">
-                            <i class="fas fa-heart me-2"></i> Favoris
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Contenu principal -->
-        <div class="col-lg-9">
-            <div class="tab-content">
-                <!-- Profil -->
-                <div class="tab-pane fade show active" id="profile">
+        <div class="col-12">
                     <div class="card shadow-sm">
                         <div class="card-body">
                             <h4 class="mb-4">Mon profil</h4>
                             <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
                                 @csrf
                                 @method('PUT')
-                                
+
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">Prénom</label>
-                                        <input type="text" name="prenom" class="form-control" 
+                                        <input type="text" name="prenom" class="form-control"
                                                value="{{ auth()->user()->prenom }}" required>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">Nom</label>
-                                        <input type="text" name="nom" class="form-control" 
+                                        <input type="text" name="nom" class="form-control"
                                                value="{{ auth()->user()->nom }}" required>
                                     </div>
                                 </div>
 
                                 <div class="mb-3">
                                     <label class="form-label">Email</label>
-                                    <input type="email" class="form-control" 
+                                    <input type="email" class="form-control"
                                            value="{{ auth()->user()->email }}" readonly>
                                 </div>
 
                                 <div class="mb-3">
                                     <label class="form-label">Téléphone</label>
-                                    <input type="tel" name="phone" class="form-control" 
+                                    <input type="tel" name="phone" class="form-control"
                                            value="{{ auth()->user()->phone }}">
                                 </div>
 
@@ -75,7 +43,7 @@
                                     <label class="form-label">Genre</label>
                                     <select name="genre" class="form-select">
                                         <option value="">Sélectionner</option>
-                                        <option value="M" {{ auth()->user()->genre === 'M' ? 'selected' : '' }}>Masculin</option>
+                                        <option value="M" {{ auth()->user()->genre === 'M' ? 'selected' : '' }}>Homme</option>
                                         <option value="F" {{ auth()->user()->genre === 'F' ? 'selected' : '' }}>Féminin</option>
                                     </select>
                                 </div>
@@ -96,10 +64,12 @@
                             </form>
                         </div>
                     </div>
-                </div>
+        </div>
+    </div>
 
-                <!-- Réservations -->
-                <div class="tab-pane fade" id="reservations">
+    <!-- Réservations -->
+    <div class="row mt-4">
+        <div class="col-12">
                     <div class="card shadow-sm">
                         <div class="card-body">
                             <h4 class="mb-4">Mes réservations</h4>
@@ -131,7 +101,7 @@
                                                         @endif
                                                     </td>
                                                     <td>
-                                                        <a href="{{ route('reservations.show', $reservation) }}" 
+                                                        <a href="{{ route('reservations.show', $reservation) }}"
                                                            class="btn btn-sm btn-primary">
                                                             Détails
                                                         </a>
@@ -149,10 +119,12 @@
                             @endif
                         </div>
                     </div>
-                </div>
+        </div>
+    </div>
 
-                <!-- Paiements -->
-                <div class="tab-pane fade" id="payments">
+    <!-- Paiements -->
+    <div class="row mt-4">
+        <div class="col-12">
                     <div class="card shadow-sm">
                         <div class="card-body">
                             <h4 class="mb-4">Mes paiements</h4>
@@ -187,7 +159,7 @@
                                                     <td>{{ $payment->created_at->format('d/m/Y H:i') }}</td>
                                                     <td>
                                                         @if($payment->statut === 'payé')
-                                                            <a href="{{ route('payments.success', $payment) }}" 
+                                                            <a href="{{ route('payments.success', $payment) }}"
                                                                class="btn btn-sm btn-primary">
                                                                 Voir le ticket
                                                             </a>
@@ -206,10 +178,12 @@
                             @endif
                         </div>
                     </div>
-                </div>
+        </div>
+    </div>
 
-                <!-- Favoris -->
-                <div class="tab-pane fade" id="favorites">
+    <!-- Favoris -->
+    <div class="row mt-4">
+        <div class="col-12">
                     <div class="card shadow-sm">
                         <div class="card-body">
                             <h4 class="mb-4">Mes événements favoris</h4>
@@ -218,7 +192,7 @@
                                     @foreach($favorites as $favorite)
                                         <div class="col-md-6">
                                             <div class="card">
-                                                <img src="{{ asset($favorite->event->image) }}" 
+                                                <img src="{{ asset($favorite->event->image) }}"
                                                      class="card-img-top" alt="{{ $favorite->event->title }}">
                                                 <div class="card-body">
                                                     <h5 class="card-title">{{ $favorite->event->title }}</h5>
@@ -226,7 +200,7 @@
                                                         <i class="far fa-calendar-alt text-primary me-2"></i>
                                                         {{ $favorite->event->start_date->format('d M Y') }}
                                                     </p>
-                                                    <a href="{{ route('events.show', $favorite->event) }}" 
+                                                    <a href="{{ route('events.show', $favorite->event) }}"
                                                        class="btn btn-primary">
                                                         Voir l'événement
                                                     </a>
@@ -243,8 +217,6 @@
                             @endif
                         </div>
                     </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>

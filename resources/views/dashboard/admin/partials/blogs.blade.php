@@ -1,31 +1,37 @@
-<div class="modern-card">
-    <div class="card-header-modern">
-        <div class="card-title">
-            <i class="fas fa-blog"></i>
-            Gestion des Articles
-        </div>
-        <div class="d-flex gap-2">
-            <a href="{{ route('admin.blogs.create') }}" class="btn btn-primary-modern">
-                <i class="fas fa-plus"></i>
-                Créer un article
-            </a>
-            <div class="input-group">
-                <input type="text" class="form-control form-input-modern" id="blogSearch" placeholder="Rechercher..." style="padding: 0.5rem 1rem;">
-                <button class="btn btn-primary" type="button" id="searchBlogBtn">
-                    <i class="fas fa-search"></i>
-                </button>
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-blog me-1"></i>
+                Gestion des Articles
+            </h5>
+            <div class="d-flex gap-2">
+                <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Retour au tableau de bord
+                </a>
+                <a href="{{ route('admin.blogs.create') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>
+                    Créer un article
+                </a>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="blogSearch" placeholder="Rechercher...">
+                    <button class="btn btn-outline-secondary" type="button" id="searchBlogBtn">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                <select class="form-select" id="blogSort">
+                    <option value="">Trier par...</option>
+                    <option value="popular">Popularité</option>
+                    <option value="date">Date</option>
+                    <option value="comments">Commentaires</option>
+                </select>
             </div>
-            <select class="form-select form-select-modern" id="blogSort" style="padding: 0.5rem 2rem 0.5rem 1rem;">
-                <option value="">Trier par...</option>
-                <option value="popular">Popularité</option>
-                <option value="date">Date</option>
-                <option value="comments">Commentaires</option>
-            </select>
         </div>
     </div>
-    <div class="card-body-modern p-4">
-        <div class="table-container">
-            <table class="modern-table">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
                 <thead>
                     <tr>
                         <th>Titre</th>
@@ -43,7 +49,7 @@
                 </tbody>
             </table>
         </div>
-        <div id="blogsPagination" class="pagination-container">
+        <div id="blogsPagination" class="d-flex justify-content-center mt-3">
             <!-- Pagination loaded dynamically -->
         </div>
     </div>
@@ -54,32 +60,32 @@
 let currentBlogPage = 1;
 
 function loadBlogs(page = 1, search = '', sort = '') {
-    $.get(`{{ route('admin.blogs') }}?page=${page}&search=${search}&sort=${sort}`, function(response) {
+    $.get(`{{ url('admin/blogs') }}?page=${page}&search=${search}&sort=${sort}`, function(response) {
         $('#blogsTableBody').empty();
-        
-        response.data.forEach(blog => {
-            const statusBadge = blog.status === 'published' 
-                ? '<span class="modern-badge badge-success">Publié</span>' 
-                : '<span class="modern-badge badge-warning">Brouillon</span>';
 
+        response.data.forEach(blog => {
             $('#blogsTableBody').append(`
                 <tr>
-                    <td><div class="fw-bold text-dark">${blog.title}</div></td>
+                    <td>${blog.title}</td>
                     <td>${blog.user.name}</td>
                     <td>${new Date(blog.created_at).toLocaleDateString()}</td>
                     <td>${blog.views}</td>
                     <td>${blog.likes_count}</td>
                     <td>${blog.comments_count}</td>
-                    <td>${statusBadge}</td>
                     <td>
-                        <div class="btn-group-modern" role="group">
-                            <button class="btn btn-sm btn-info-modern view-blog" data-id="${blog.id}">
+                        <span class="badge bg-${blog.status === 'published' ? 'success' : 'warning'}">
+                            ${blog.status}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-primary btn-sm view-blog" data-id="${blog.id}">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button class="btn btn-sm btn-warning-modern edit-blog" data-id="${blog.id}">
+                            <button class="btn btn-warning btn-sm edit-blog" data-id="${blog.id}">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn btn-sm btn-danger-modern delete-blog" data-id="${blog.id}">
+                            <button class="btn btn-danger btn-sm delete-blog" data-id="${blog.id}">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -98,12 +104,12 @@ function updateBlogPagination(response) {
     pagination.empty();
 
     if (response.last_page > 1) {
-        let paginationHtml = '<ul class="pagination-modern">';
-        
+        let paginationHtml = '<ul class="pagination">';
+
         // Previous page
         paginationHtml += `
             <li class="page-item ${response.current_page === 1 ? 'disabled' : ''}">
-                <a class="page-link" href="#" data-page="${response.current_page - 1}"><i class="fas fa-chevron-left me-1"></i> Précédent</a>
+                <a class="page-link" href="#" data-page="${response.current_page - 1}">Précédent</a>
             </li>
         `;
 
@@ -119,7 +125,7 @@ function updateBlogPagination(response) {
         // Next page
         paginationHtml += `
             <li class="page-item ${response.current_page === response.last_page ? 'disabled' : ''}">
-                <a class="page-link" href="#" data-page="${response.current_page + 1}">Suivant <i class="fas fa-chevron-right ms-1"></i></a>
+                <a class="page-link" href="#" data-page="${response.current_page + 1}">Suivant</a>
             </li>
         `;
 

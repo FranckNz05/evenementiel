@@ -29,7 +29,7 @@
                             <li>Personnaliser votre expérience</li>
                             <li>Améliorer notre site web</li>
                             <li>Traiter vos transactions</li>
-                            <li>Vous envoyer des emails concernant vos commandes ou autres actualités</li>
+                            <li>Vous envoyer des emails concernant vos reservations ou autres actualités</li>
                         </ul>
                     </section>
 
@@ -64,7 +64,7 @@
                         <ul>
                             <li>Email : contact@mokilievent.com</li>
                             <li>Téléphone : +243 000 000 000</li>
-                            <li>Adresse : Kinshasa, RDC</li>
+                            <li>Adresse : CONGO, Brazzaville</li>
                         </ul>
                     </section>
                 </div>

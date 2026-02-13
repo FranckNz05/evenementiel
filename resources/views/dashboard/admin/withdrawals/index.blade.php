@@ -29,25 +29,29 @@
     padding: 2rem;
 }
 
-/* Header */
+/* Header - Section bleue */
 .page-header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    border-radius: 0.75rem;
+    padding: 1.5rem 2rem;
+    margin-bottom: 2rem;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 2rem;
     flex-wrap: wrap;
     gap: 1rem;
+    box-shadow: 0 4px 12px rgba(15, 26, 61, 0.15);
 }
 
 .page-title-section h1 {
     font-size: 2rem;
     font-weight: 700;
-    color: var(--gray-900);
+    color: #ffffff;
     margin: 0 0 0.5rem 0;
 }
 
 .page-title-section p {
-    color: var(--gray-600);
+    color: rgba(255, 255, 255, 0.9);
     margin: 0;
 }
 
@@ -84,13 +88,14 @@
 
 .btn-secondary {
     background: white;
-    color: var(--gray-700);
-    border: 1px solid var(--gray-300);
+    color: var(--primary);
+    border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .btn-secondary:hover {
-    background: var(--gray-50);
-    border-color: var(--gray-400);
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: var(--primary-light);
 }
 
 .btn-success {
@@ -293,9 +298,10 @@
 }
 
 .withdrawals-table tbody td {
-    padding: 1rem;
+    padding: 1.25rem 1rem;
     font-size: 0.875rem;
     color: var(--gray-900);
+    vertical-align: middle;
 }
 
 .organizer-info {

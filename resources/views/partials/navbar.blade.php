@@ -1,9 +1,9 @@
 <!-- Navbar Start -->
-<nav class="navbar navbar-expand-lg fixed-top navbar-dark bg-premium shadow-sm">
+<nav class="navbar navbar-expand-lg fixed-top bg-dark shadow-sm">
     <div class="container">
         <!-- Logo -->
         <a class="navbar-brand d-flex align-items-center" href="{{ route('home') }}">
-            <span class="text-white fw-bold">Mokili</span><span class="text-danger fw-bold">Event</span>
+            <span class="text-primary fw-bold">Mokili</span><span class="text-warning fw-bold">Event</span>
         </a>
 
         <!-- Bouton pour mobile -->
@@ -16,45 +16,55 @@
             <!-- Menu principal -->
             <ul class="navbar-nav mx-auto">
                 <li class="nav-item">
-                    <a class="nav-link px-3 {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">
-                        <i class="fas fa-home me-1"></i> Accueil
+                    <a class="nav-link px-3 text-white {{ request()->routeIs('events.public') || request()->routeIs('events.index') || request()->routeIs('direct-events.*') ? 'active' : '' }}" href="{{ route('events.public') }}">
+                        Trouver un évènement
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link px-3 {{ request()->routeIs('events.*') ? 'active' : '' }}" href="{{ route('events.index') }}">
-                        <i class="fas fa-calendar-alt me-1"></i> Événements
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link px-3 {{ request()->routeIs('blogs.*') ? 'active' : '' }}" href="{{ route('blogs.index') }}">
-                        <i class="fas fa-blog me-1"></i> Blog
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link px-3 {{ request()->routeIs('about') ? 'active' : '' }}" href="{{ route('about.index') }}">
-                        <i class="fas fa-info-circle me-1"></i> À propos
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link px-3 {{ request()->routeIs('contact') ? 'active' : '' }}" href="{{ route('contact.index') }}">
-                        <i class="fas fa-envelope me-1"></i> Contact
-                    </a>
-                </li>
+                @auth
+                    <li class="nav-item">
+                        <a class="nav-link px-3 text-white {{ request()->routeIs('events.select-type') || request()->routeIs('events.create') || request()->routeIs('organizer.events.*') || request()->routeIs('events.wizard.*') || request()->routeIs('custom-offers.*') || request()->routeIs('custom-events.*') ? 'active' : '' }}" href="{{ route('events.create') }}">
+                            Créer un évènement
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3 text-white {{ request()->routeIs('profile.*') ? 'active' : '' }}" href="{{ route('profile.edit') }}">
+                            Mon compte
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3 text-white {{ request()->routeIs('reservations.*') ? 'active' : '' }}" href="{{ route('reservations.index') }}">
+                            Mes réservations
+                        </a>
+                    </li>
+                @else
+                    <li class="nav-item">
+                        <a class="nav-link px-3 text-white"
+                           href="#"
+                           data-auth-modal-target="authLoginModal"
+                           data-auth-redirect="{{ route('events.select-type') }}">
+                        Créer un évènement
+                        </a>
+                    </li>
+                @endauth
             </ul>
 
             <!-- Boutons d'action -->
             <div class="d-flex gap-2">
                 @auth
                     <div class="dropdown">
-                        <button class="btn btn-premium-light dropdown-toggle text-white" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user-circle me-1 text-white"></i> {{ Auth::user()->name }}
+                        <button class="btn btn-outline-warning dropdown-toggle" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle me-1"></i> {{ Auth::user()->name }}
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="userMenu">
-                            <li><a class="dropdown-item" href="{{ route('profile.edit') }}"><i class="fas fa-user me-2"></i> Mon profil</a></li>
-                            <li><a class="dropdown-item" href="{{ route('profile.tickets') }}"><i class="fas fa-ticket-alt me-2"></i> Mes billets</a></li>
-                            @if(Auth::user()->hasRole('organizer'))
-                                <li><a class="dropdown-item" href="{{ route('organizer.dashboard') }}"><i class="fas fa-chart-line me-2"></i> Tableau de bord</a></li>
+                            @if(Auth::user()->hasRole(3))
+                                <li><a class="dropdown-item" href="{{ route('admin.dashboard') }}"><i class="fas fa-tachometer-alt me-2"></i> Tableau de bord Administrateur</a></li>
+                            @elseif(Auth::user()->hasRole(2))
+                                <li><a class="dropdown-item" href="{{ route('dashboard') }}"><i class="fas fa-chart-line me-2"></i> Tableau de bord Organisateur</a></li>
+                            @else
+                                <li><a class="dropdown-item" href="{{ route('dashboard') }}"><i class="fas fa-tachometer-alt me-2"></i> Tableau de bord</a></li>
+                                <li><a class="dropdown-item" href="{{ route('profile.tickets') }}"><i class="fas fa-ticket-alt me-2"></i> Mes billets</a></li>
                             @endif
+
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form method="POST" action="{{ route('logout') }}">
@@ -67,11 +77,15 @@
                         </ul>
                     </div>
                 @else
-                    <a href="{{ route('auth.login') }}" class="btn btn-outline-light rounded-pill px-4">
-                        <i class="fas fa-sign-in-alt me-1"></i> Connexion
+                    <a href="#"
+                       class="btn btn-outline-warning"
+                       data-auth-modal-target="authLoginModal">
+                        Connexion
                     </a>
-                    <a href="{{ route('auth.register') }}" class="btn btn-danger rounded-pill px-4">
-                        <i class="fas fa-user-plus me-1"></i> Inscription
+                    <a href="#"
+                       class="btn btn-warning text-dark"
+                       data-auth-modal-target="authRegisterModal">
+                        Inscription
                     </a>
                 @endauth
             </div>
@@ -84,17 +98,13 @@
     padding-top: 1rem;
     padding-bottom: 1rem;
     transition: all 0.3s ease;
-}
-
-.bg-premium {
-    background: linear-gradient(135deg, #0f1a3d 0%, #1a2a5a 100%);
-    backdrop-filter: blur(10px);
+    background-color: #1a237e !important; /* Bleu de nuit */
 }
 
 .navbar.scrolled {
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
-    background: rgba(15, 26, 61, 0.95);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 .navbar-brand {
@@ -104,67 +114,70 @@
 
 .nav-link {
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.8) !important;
-    transition: all 0.3s ease;
-}
-
-.nav-link i {
-    color: white !important;
+    transition: color 0.3s ease;
 }
 
 .nav-link:hover {
-    color: white !important;
-    transform: translateY(-1px);
+    color: #ffffff !important; /* blanc or au survol */
 }
 
 .nav-link.active {
-    color: white !important;
+    color: #ffffff !important; /* blanc or pour l'élément actif */
     position: relative;
 }
 
 .nav-link.active::after {
     content: '';
     position: absolute;
-    bottom: -5px;
-    left: 1rem;
-    right: 1rem;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
     height: 2px;
-    background-color: var(--bs-danger);
+    background-color: #ffffff; /* blanc or */
     border-radius: 2px;
-}
-
-.btn-premium-light {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    transition: all 0.3s ease;
-}
-
-.btn-premium-light:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.3);
 }
 
 .dropdown-menu {
     border-radius: 0.5rem;
-    margin-top: 0.5rem !important;
+    background-color: #1a237e; /* Bleu de nuit */
+    border: 1px solid rgba(255, 215, 0, 0.2); /* Bordure blanc or très transparente */
 }
 
 .dropdown-item {
     padding: 0.5rem 1rem;
     font-weight: 500;
+    color: white !important;
 }
 
 .dropdown-item:hover {
-    background-color: #f8f9fa;
+    background-color: rgba(255, 215, 0, 0.1) !important; /* blanc or très transparent */
+    color: #ffffff !important;
 }
 
 .dropdown-item i {
     width: 20px;
 }
 
+.btn-warning {
+    background-color: #ffffff !important; /* blanc or */
+    border-color: #ffffff !important;
+    color: #1a237e !important; /* Texte en bleu de nuit */
+}
+
+.btn-outline-warning {
+    color: #ffffff !important; /* Texte en blanc or */
+    border-color: #ffffff !important;
+}
+
+.btn-outline-warning:hover {
+    background-color: rgba(255, 215, 0, 0.1) !important;
+}
+
 @media (max-width: 991.98px) {
     .navbar-collapse {
         padding: 1rem 0;
+        background-color: #1a237e; /* Bleu de nuit pour le menu mobile */
     }
 
     .navbar-nav {
@@ -205,3 +218,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <!-- Navbar End -->
+

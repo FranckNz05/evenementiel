@@ -43,6 +43,7 @@ class AirtelMoneyService
     protected $httpTimeout = 30; // secondes
     protected $httpConnectTimeout = 10; // secondes
     protected $minAmount = 100; // Montant minimum en FCFA
+    protected $maxAmount = 50000000; // Montant maximum en FCFA (limite AML: 50 000 000 FCFA)
 
     protected $baseUrl;
     protected $clientId;
@@ -1274,16 +1275,167 @@ class AirtelMoneyService
      */
     public function disburse(array $data)
     {
+        // Variable pour stocker la réponse de getUserInfo en cas d'erreur (accessible dans le catch)
+        $userInfoResponse = null;
+        
         try {
+            // ============================================
+            // VALIDATIONS PRÉALABLES (Cas de test TC05-TC09, TC11, TC02)
+            // ============================================
+            
+            // TC07 & TC09: Validation du montant (zéro et négatif)
+            if (!isset($data['amount'])) {
+                Log::warning('TC07/TC09: Montant manquant dans la requête disbursement', [
+                    'test_case' => 'TC07/TC09',
+                    'data' => array_merge($data, ['pin' => '[REDACTED]'])
+                ]);
+                throw new Exception('Le montant est requis');
+            }
+
+            $amount = $data['amount'];
+            
+            // Vérifier que le montant est numérique
+            if (!is_numeric($amount)) {
+                Log::warning('TC07/TC09: Montant non numérique', [
+                    'test_case' => 'TC07/TC09',
+                    'amount' => $amount
+                ]);
+                throw new Exception('Le montant doit être un nombre');
+            }
+
+            // TC07: Vérifier que le montant n'est pas zéro
+            if ($amount == 0) {
+                Log::warning('TC07: Tentative de disbursement avec montant zéro', [
+                    'test_case' => 'TC07',
+                    'amount' => $amount,
+                    'msisdn' => $data['phone'] ?? null
+                ]);
+                throw new Exception('Le montant ne peut pas être zéro. Montant minimum: ' . $this->minAmount . ' ' . $this->currency);
+            }
+
+            // TC09: Vérifier que le montant n'est pas négatif
+            if ($amount < 0) {
+                Log::warning('TC09: Tentative de disbursement avec montant négatif', [
+                    'test_case' => 'TC09',
+                    'amount' => $amount,
+                    'msisdn' => $data['phone'] ?? null
+                ]);
+                throw new Exception('Le montant ne peut pas être négatif');
+            }
+
+            // TC06: Vérifier le montant minimum (limite AML minimale)
+            if ($amount < $this->minAmount) {
+                Log::warning('TC06: Montant inférieur à la limite AML minimale', [
+                    'test_case' => 'TC06',
+                    'amount' => $amount,
+                    'min_amount' => $this->minAmount,
+                    'msisdn' => $data['phone'] ?? null
+                ]);
+                throw new Exception('Le montant est inférieur à la limite minimale autorisée. Montant minimum: ' . $this->minAmount . ' ' . $this->currency);
+            }
+
+            // TC05: Vérifier le montant maximum (limite AML maximale)
+            $maxAmount = config('services.airtel.max_amount', $this->maxAmount);
+            if ($amount > $maxAmount) {
+                Log::warning('TC05: Montant supérieur à la limite AML maximale', [
+                    'test_case' => 'TC05',
+                    'amount' => $amount,
+                    'max_amount' => $maxAmount,
+                    'msisdn' => $data['phone'] ?? null
+                ]);
+                throw new Exception('Le montant dépasse la limite maximale autorisée. Montant maximum: ' . number_format($maxAmount, 0, ',', ' ') . ' ' . $this->currency);
+            }
+
+            // TC08: Logger les montants décimaux (autorisés)
+            if (fmod($amount, 1) != 0) {
+                Log::info('TC08: Disbursement avec montant décimal autorisé', [
+                    'test_case' => 'TC08',
+                    'amount' => $amount,
+                    'msisdn' => $data['phone'] ?? null
+                ]);
+            }
+
+            // Nettoyer le numéro de téléphone
+            $msisdn = $this->cleanPhoneNumber($data['phone']);
+
+            // TC11 & TC02: Vérifier l'utilisateur avant le disbursement
+            $validateUser = config('services.airtel.validate_user_before_disburse', true);
+            
+            if ($validateUser) {
+                try {
+                    $userInfo = $this->getUserInfo($data['phone']);
+                    
+                    // Stocker la réponse complète pour utilisation dans le catch si nécessaire
+                    $userInfoResponse = $userInfo;
+                    
+                    if (!$userInfo['success']) {
+                        // Logger la réponse complète d'Airtel de getUserInfo
+                        Log::error('TC11: Échec getUserInfo - Réponse complète Airtel', [
+                            'test_case' => 'TC11',
+                            'msisdn' => $msisdn,
+                            'error' => $userInfo['message'] ?? 'Utilisateur introuvable',
+                            'response_code' => $userInfo['error_code'] ?? null,
+                            'raw_response' => $userInfo['raw_response'] ?? null,
+                            'raw_body' => $userInfo['raw_body'] ?? null,
+                            'airtel_message' => $userInfo['airtel_message'] ?? $userInfo['message'] ?? null,
+                            'user_info_full' => $userInfo,
+                            'airtel_response' => [
+                                'success' => false,
+                                'status' => $userInfo['status'] ?? 'error',
+                                'message' => $userInfo['airtel_message'] ?? $userInfo['message'] ?? 'Erreur lors de la vérification',
+                                'error_code' => $userInfo['error_code'] ?? null,
+                                'raw_response' => $userInfo['raw_response'] ?? null,
+                                'raw_body' => $userInfo['raw_body'] ?? null,
+                            ]
+                        ]);
+                        
+                        // Créer une exception avec la réponse d'Airtel attachée
+                        $exception = new Exception('Le wallet n\'est pas enregistré sur Airtel Money. Erreur lors de la vérification');
+                        // Stocker la réponse dans l'exception via une propriété dynamique
+                        $exception->userInfoResponse = $userInfo;
+                        throw $exception;
+                    }
+
+                    // TC02: Vérifier si l'utilisateur est barré
+                    if ($userInfo['user']['is_barred'] ?? false) {
+                        Log::warning('TC02: Tentative de disbursement vers utilisateur barré', [
+                            'test_case' => 'TC02',
+                            'msisdn' => $msisdn,
+                            'user_info' => [
+                                'is_barred' => true,
+                                'account_status' => $userInfo['user']['account_status'] ?? null
+                            ]
+                        ]);
+                        throw new Exception('Le destinataire est barré. La transaction ne peut pas être complétée. Veuillez contacter le support Airtel Money.');
+                    }
+
+                    Log::info('TC02/TC11: Validation utilisateur réussie avant disbursement', [
+                        'test_case' => 'TC02/TC11',
+                        'msisdn' => $msisdn,
+                        'is_barred' => false,
+                        'is_pin_set' => $userInfo['user']['is_pin_set'] ?? null,
+                        'account_status' => $userInfo['user']['account_status'] ?? null
+                    ]);
+                } catch (Exception $userValidationException) {
+                    // Si c'est déjà notre exception personnalisée, la relancer
+                    if (str_contains($userValidationException->getMessage(), 'barré') || 
+                        str_contains($userValidationException->getMessage(), 'enregistré')) {
+                        throw $userValidationException;
+                    }
+                    // Sinon, logger l'erreur mais continuer (l'API Airtel vérifiera aussi)
+                    Log::warning('Erreur lors de la validation utilisateur, continuation avec appel API', [
+                        'msisdn' => $msisdn,
+                        'error' => $userValidationException->getMessage()
+                    ]);
+                }
+            }
+
             // Obtenir le token d'authentification
             $accessToken = $this->getAccessToken();
             
             if (!$accessToken) {
                 throw new Exception('Impossible d\'obtenir le token d\'authentification');
             }
-
-            // Nettoyer le numéro de téléphone
-            $msisdn = $this->cleanPhoneNumber($data['phone']);
 
             // Chiffrer le PIN
             $encryptedPin = $this->encryptPin($data['pin']);
@@ -1344,32 +1496,108 @@ class AirtelMoneyService
             $logPayload = $payload;
             unset($logPayload['pin']); // Retirer complètement le PIN des logs
             
-            Log::info('Initiation disbursement Airtel Money', [
+            // TC13/TC14: Logger le type de wallet utilisé
+            $walletType = $data['wallet_type'] ?? 'MOBILE_MONEY';
+            
+            Log::info('TC01/TC03/TC08/TC13: Initiation disbursement Airtel Money', [
+                'test_cases' => ['TC01', 'TC03', 'TC08', 'TC13'],
                 'payload' => $logPayload,
                 'msisdn' => $msisdn,
-                'pin_encrypted' => true // Indiquer que le PIN est chiffré mais ne pas le logger
+                'amount' => $amount,
+                'wallet_type' => $walletType,
+                'transaction_type' => $data['transaction_type'] ?? 'B2B',
+                'pin_encrypted' => true, // Indiquer que le PIN est chiffré mais ne pas le logger
+                'validations_passed' => [
+                    'amount_valid' => true,
+                    'amount_not_zero' => true,
+                    'amount_not_negative' => true,
+                    'amount_within_limits' => true,
+                    'user_validated' => $validateUser
+                ]
             ]);
 
             // Faire la requête POST
+            $startTime = microtime(true);
             $response = $this->httpClient()->withHeaders($headers)
                 ->post($this->baseUrl . '/standard/v3/disbursements', $payload);
+            $requestDuration = microtime(true) - $startTime;
 
+            // Capturer le contenu brut de la réponse AVANT de parser le JSON
+            $rawBody = $response->body();
+            
+            // Essayer de parser le JSON
             $responseData = $response->json();
+            
+            // Si le JSON parsing échoue, utiliser le contenu brut
+            if ($responseData === null && !empty($rawBody)) {
+                try {
+                    $responseData = json_decode($rawBody, true);
+                } catch (\Exception $e) {
+                    // Si le JSON est invalide, créer un objet avec le contenu brut
+                    $responseData = [
+                        'raw_body' => $rawBody,
+                        'parse_error' => $e->getMessage()
+                    ];
+                }
+            }
+
+            // TOUS LES CAS DE TEST: Logger la réponse complète d'Airtel
+            Log::info('Réponse API Airtel Money Disbursement reçue', [
+                'http_status' => $response->status(),
+                'request_duration_ms' => round($requestDuration * 1000, 2),
+                'response_data' => $responseData, // Réponse complète pour tous les cas de test
+                'raw_body' => $rawBody, // Contenu brut de la réponse
+                'transaction_id' => $transactionId,
+                'msisdn' => $msisdn,
+                'amount' => $amount,
+                'response_headers' => $response->headers(),
+            ]);
 
             // Extraire le code d'erreur de la réponse
             $errorCode = $responseData['status']['response_code'] ?? $responseData['status']['result_code'] ?? null;
             $errorInfo = $errorCode ? $this->getErrorInfo($errorCode) : null;
+
+            // TC10: Détecter les timeouts
+            if ($requestDuration > ($this->httpTimeout - 1)) {
+                Log::warning('TC10: Timeout détecté lors du disbursement', [
+                    'test_case' => 'TC10',
+                    'request_duration_ms' => round($requestDuration * 1000, 2),
+                    'timeout_limit_ms' => $this->httpTimeout * 1000,
+                    'transaction_id' => $transactionId,
+                    'note' => 'Rollback automatique attendu côté Airtel si transaction initiée'
+                ]);
+            }
 
             if (!$response->successful()) {
                 // Ne jamais logger le PIN, même en cas d'erreur
                 $logPayload = $payload;
                 unset($logPayload['pin']);
                 
+                // Identifier le cas de test selon le code d'erreur
+                $testCase = null;
+                if ($errorCode === 'DP00900001007') {
+                    $testCase = 'TC04'; // Insufficient Funds
+                } elseif ($errorCode === 'DP00900001019' || $errorCode === 'DP00800001010') {
+                    $testCase = 'TC02'; // Barred user
+                } elseif ($errorCode === 'DP00900001012' || $errorCode === 'DP00800001010') {
+                    $testCase = 'TC11'; // Wallet not registered
+                } elseif ($errorCode === 'DP00900001003' || $errorCode === 'DP00900001004') {
+                    $testCase = 'TC05/TC06'; // Amount limits
+                } elseif ($errorCode === 'DP00800001024') {
+                    $testCase = 'TC10'; // Timeout
+                } elseif ($errorCode === 'DP00900001004' || $errorCode === 'DP00800001004') {
+                    $testCase = 'TC07/TC09'; // Invalid amount (zero/negative)
+                }
+                
                 Log::error('Erreur lors du disbursement Airtel Money', [
+                    'test_case' => $testCase ?? 'Unknown',
                     'http_status' => $response->status(),
                     'error_code' => $errorCode,
-                    'response' => $responseData,
-                    'payload' => $logPayload
+                    'error_info' => $errorInfo,
+                    'response' => $responseData, // Réponse complète loggée
+                    'payload' => $logPayload,
+                    'msisdn' => $msisdn,
+                    'amount' => $amount
                 ]);
 
                 $message = $errorInfo['message'] ?? $responseData['status']['message'] ?? 'Erreur lors du retrait';
@@ -1393,11 +1621,24 @@ class AirtelMoneyService
                 if (in_array($errorCode, ['DP00800001001', 'DP00900001001'])) {
                     $transactionData = $responseData['data']['transaction'] ?? [];
                     
-                    Log::info('Disbursement Airtel Money réussi', [
+                    // TC01/TC03/TC08/TC13: Succès - Logger avec identification du cas de test
+                    $testCases = ['TC01', 'TC03']; // Sufficient funds / Unbarred user
+                    if (fmod($amount, 1) != 0) {
+                        $testCases[] = 'TC08'; // Decimal amount
+                    }
+                    if ($walletType !== 'MOBILE_MONEY') {
+                        $testCases[] = 'TC13'; // Dedicated wallet
+                    }
+                    
+                    Log::info('TC01/TC03/TC08/TC13: Disbursement Airtel Money réussi', [
+                        'test_cases' => $testCases,
                         'transaction_id' => $transactionData['id'] ?? $payload['transaction']['id'],
                         'airtel_money_id' => $transactionData['airtel_money_id'] ?? null,
                         'reference_id' => $transactionData['reference_id'] ?? null,
-                        'error_code' => $errorCode,
+                        'response_code' => $errorCode,
+                        'wallet_type' => $walletType,
+                        'amount' => $amount,
+                        'response' => $responseData // Réponse complète loggée
                     ]);
 
                     return [
@@ -1409,15 +1650,37 @@ class AirtelMoneyService
                         'reference_id' => $transactionData['reference_id'] ?? null,
                         'response_code' => $errorCode,
                         'raw_response' => $responseData,
+                        'raw_body' => $rawBody,
                     ];
                 }
 
-                // Autres statuts
-                Log::warning('Disbursement Airtel Money avec statut intermédiaire', [
+                // Autres statuts (échecs ou statuts intermédiaires)
+                // TC04/TC05/TC06/TC07/TC09/TC10/TC11/TC14: Identifier le cas de test
+                $testCase = null;
+                if ($errorCode === 'DP00900001007') {
+                    $testCase = 'TC04'; // Insufficient Funds
+                } elseif ($errorCode === 'DP00900001019' || $errorCode === 'DP00800001010') {
+                    $testCase = 'TC02'; // Barred user
+                } elseif ($errorCode === 'DP00900001012') {
+                    $testCase = 'TC11'; // Wallet not registered
+                } elseif ($errorCode === 'DP00900001003' || $errorCode === 'DP00900001004') {
+                    $testCase = 'TC05/TC06'; // Amount limits
+                } elseif ($errorCode === 'DP00800001024') {
+                    $testCase = 'TC10'; // Timeout
+                } elseif ($errorCode === 'DP00900001004' || $errorCode === 'DP00800001004') {
+                    $testCase = 'TC07/TC09'; // Invalid amount
+                } elseif ($walletType !== 'MOBILE_MONEY') {
+                    $testCase = 'TC14'; // Dedicated wallet failed
+                }
+                
+                Log::warning('Disbursement Airtel Money avec statut intermédiaire ou échec', [
+                    'test_case' => $testCase ?? 'Unknown',
                     'transaction_id' => $payload['transaction']['id'],
                     'error_code' => $errorCode,
                     'error_info' => $errorInfo,
-                    'response' => $responseData
+                    'response' => $responseData, // Réponse complète loggée
+                    'wallet_type' => $walletType,
+                    'amount' => $amount
                 ]);
 
                 return [
@@ -1429,6 +1692,7 @@ class AirtelMoneyService
                     'error_code' => $errorCode,
                     'retry' => $errorInfo['retry'],
                     'raw_response' => $responseData,
+                    'raw_body' => $rawBody,
                 ];
             }
 
@@ -1436,11 +1700,14 @@ class AirtelMoneyService
             $transactionStatus = $responseData['data']['transaction']['status'] ?? 'pending';
             $isSuccess = $responseData['status']['success'] ?? false;
 
-            Log::info('Réponse disbursement Airtel Money', [
+            // Cas où il n'y a pas de code d'erreur explicite
+            Log::info('Réponse disbursement Airtel Money (sans code d\'erreur explicite)', [
                 'status' => $transactionStatus,
                 'success' => $isSuccess,
                 'response_code' => $errorCode,
-                'response' => $responseData
+                'response' => $responseData, // Réponse complète loggée
+                'wallet_type' => $walletType,
+                'amount' => $amount
             ]);
 
             return [
@@ -1452,6 +1719,7 @@ class AirtelMoneyService
                 'reference_id' => $responseData['data']['transaction']['reference_id'] ?? null,
                 'response_code' => $errorCode,
                 'raw_response' => $responseData,
+                'raw_body' => $rawBody,
             ];
 
         } catch (Exception $e) {
@@ -1459,16 +1727,61 @@ class AirtelMoneyService
             $logData = $data;
             unset($logData['pin']);
             
+            // Identifier le cas de test selon le message d'erreur
+            $testCase = null;
+            $errorMessage = $e->getMessage();
+            if (str_contains($errorMessage, 'zéro') || str_contains($errorMessage, 'zero')) {
+                $testCase = 'TC07';
+            } elseif (str_contains($errorMessage, 'négatif') || str_contains($errorMessage, 'negative')) {
+                $testCase = 'TC09';
+            } elseif (str_contains($errorMessage, 'inférieur') || str_contains($errorMessage, 'minimum')) {
+                $testCase = 'TC06';
+            } elseif (str_contains($errorMessage, 'dépasse') || str_contains($errorMessage, 'maximum')) {
+                $testCase = 'TC05';
+            } elseif (str_contains($errorMessage, 'barré') || str_contains($errorMessage, 'barred')) {
+                $testCase = 'TC02';
+            } elseif (str_contains($errorMessage, 'enregistré') || str_contains($errorMessage, 'registered')) {
+                $testCase = 'TC11';
+            }
+            
+            // Essayer de récupérer la réponse d'Airtel depuis plusieurs sources
+            $airtelResponse = null;
+            
+            // 1. Depuis l'exception si elle contient userInfoResponse
+            if (isset($e->userInfoResponse)) {
+                $airtelResponse = $e->userInfoResponse;
+            }
+            // 2. Depuis la variable $userInfoResponse si elle existe dans le scope
+            elseif (isset($userInfoResponse)) {
+                $airtelResponse = $userInfoResponse;
+            }
+            // 3. Depuis logData si elle existe
+            elseif (isset($logData['user_info_response'])) {
+                $airtelResponse = $logData['user_info_response'];
+            }
+            
             Log::error('Exception lors du disbursement Airtel Money', [
-                'error' => $e->getMessage(),
+                'test_case' => $testCase ?? 'Unknown',
+                'error' => $errorMessage,
                 'trace' => $e->getTraceAsString(),
-                'data' => $logData
+                'data' => $logData,
+                'amount' => $data['amount'] ?? null,
+                'phone' => $data['phone'] ?? null,
+                'airtel_response' => $airtelResponse,
+                'user_info_raw_body' => $airtelResponse['raw_body'] ?? null,
+                'user_info_raw_response' => $airtelResponse['raw_response'] ?? null,
+                'user_info_airtel_message' => $airtelResponse['airtel_message'] ?? $airtelResponse['message'] ?? null,
+                'user_info_full' => $airtelResponse,
             ]);
 
             return [
                 'success' => false,
                 'status' => 'error',
                 'message' => 'Erreur technique: ' . $e->getMessage(),
+                'raw_response' => $airtelResponse['raw_response'] ?? null,
+                'raw_body' => $airtelResponse['raw_body'] ?? null,
+                'airtel_response' => $airtelResponse,
+                'airtel_message' => $airtelResponse['airtel_message'] ?? $airtelResponse['message'] ?? null,
             ];
         }
     }
@@ -1825,24 +2138,55 @@ class AirtelMoneyService
             $response = $this->httpClient()->withHeaders($headers)
                 ->get($this->baseUrl . '/standard/v2/users/' . $msisdn);
 
+            // Capturer le contenu brut de la réponse AVANT de parser le JSON
+            $rawBody = $response->body();
+            
+            // Essayer de parser le JSON
             $responseData = $response->json();
+            
+            // Si le JSON parsing échoue, utiliser le contenu brut
+            if ($responseData === null && !empty($rawBody)) {
+                try {
+                    $responseData = json_decode($rawBody, true);
+                } catch (\Exception $e) {
+                    // Si le JSON est invalide, créer un objet avec le contenu brut
+                    $responseData = [
+                        'raw_body' => $rawBody,
+                        'parse_error' => $e->getMessage()
+                    ];
+                }
+            }
 
             if (!$response->successful()) {
                 $errorCode = $responseData['status']['response_code'] ?? $responseData['status']['result_code'] ?? null;
                 $errorInfo = $errorCode ? $this->getErrorInfo($errorCode) : null;
+                
+                // Extraire le message d'erreur d'Airtel
+                $airtelMessage = $responseData['status']['message'] ?? 
+                                $responseData['message'] ?? 
+                                $responseData['error'] ?? 
+                                $rawBody ?? 
+                                'Erreur lors de la vérification';
 
                 Log::error('Erreur lors de la vérification des informations utilisateur Airtel Money', [
                     'http_status' => $response->status(),
                     'msisdn' => $msisdn,
                     'error_code' => $errorCode,
-                    'response' => $responseData
+                    'response' => $responseData,
+                    'raw_response' => $responseData,
+                    'raw_body' => $rawBody,
+                    'airtel_message' => $airtelMessage,
+                    'response_headers' => $response->headers(),
                 ]);
 
                 return [
                     'success' => false,
                     'status' => $errorInfo['status'] ?? 'unknown',
-                    'message' => $errorInfo['message'] ?? $responseData['status']['message'] ?? 'Erreur lors de la vérification',
+                    'message' => $errorInfo['message'] ?? $airtelMessage,
                     'error_code' => $errorCode,
+                    'raw_response' => $responseData,
+                    'raw_body' => $rawBody,
+                    'airtel_message' => $airtelMessage,
                 ];
             }
 
@@ -1882,31 +2226,55 @@ class AirtelMoneyService
             }
 
             // Si pas de succès
+            $airtelMessage = $responseData['status']['message'] ?? 
+                            $responseData['message'] ?? 
+                            $responseData['error'] ?? 
+                            'Impossible de récupérer les informations utilisateur';
+            
             Log::warning('Échec de la récupération des informations utilisateur Airtel Money', [
                 'msisdn' => $msisdn,
                 'error_code' => $errorCode,
-                'response' => $responseData
+                'response' => $responseData,
+                'raw_body' => $rawBody ?? null,
+                'airtel_message' => $airtelMessage,
             ]);
 
             return [
                 'success' => false,
                 'status' => 'error',
-                'message' => $responseData['status']['message'] ?? 'Impossible de récupérer les informations utilisateur',
+                'message' => $airtelMessage,
                 'error_code' => $errorCode,
                 'raw_response' => $responseData,
+                'raw_body' => $rawBody ?? null,
+                'airtel_message' => $airtelMessage,
             ];
 
         } catch (Exception $e) {
+            // Essayer de capturer la réponse si elle existe dans l'exception
+            $rawBody = null;
+            if (method_exists($e, 'getResponse') && $e->getResponse()) {
+                try {
+                    $rawBody = $e->getResponse()->getBody()->getContents();
+                } catch (\Exception $bodyException) {
+                    // Ignorer si on ne peut pas récupérer le body
+                }
+            }
+            
             Log::error('Exception lors de la vérification des informations utilisateur Airtel Money', [
                 'phone_number' => $phoneNumber,
+                'msisdn' => $this->cleanPhoneNumber($phoneNumber) ?? null,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
+                'raw_body' => $rawBody,
+                'exception_class' => get_class($e),
             ]);
 
             return [
                 'success' => false,
                 'status' => 'error',
                 'message' => 'Erreur technique: ' . $e->getMessage(),
+                'raw_response' => null,
+                'raw_body' => $rawBody,
             ];
         }
     }

@@ -17,6 +17,9 @@ use Illuminate\Support\Facades\Mail;
 class WithdrawalController extends Controller
 {
     protected $commissionService;
+    
+    // Limite maximale de retrait par transaction (limite système)
+    const MAX_WITHDRAWAL_AMOUNT = 50000000; // 50 000 000 FCFA
 
     public function __construct(CommissionService $commissionService)
     {
@@ -158,8 +161,11 @@ class WithdrawalController extends Controller
             ->sum('amount');
         
         $availableBalance = $revenueData['net_revenue'] - $totalWithdrawn;
+        
+        // Le maximum retirable est le minimum entre le solde disponible et la limite système
+        $maxWithdrawableAmount = min($availableBalance, self::MAX_WITHDRAWAL_AMOUNT);
 
-        return view('dashboard.organizer.withdrawals.create', compact('availableBalance', 'revenueData'));
+        return view('dashboard.organizer.withdrawals.create', compact('availableBalance', 'revenueData', 'maxWithdrawableAmount'));
     }
 
     /**
@@ -167,25 +173,13 @@ class WithdrawalController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'amount' => 'required|numeric|min:1000',
-            'payment_method' => 'required|in:MTN Mobile Money,Airtel Money',
-            'phone_number' => ['required', 'string', 'regex:/^0(4|5|6)\d{7}$/'],
-        ], [
-            'amount.required' => 'Le montant est requis',
-            'amount.min' => 'Le montant minimum est de 1000 FCFA',
-            'payment_method.required' => 'La méthode de paiement est requise',
-            'phone_number.required' => 'Le numéro de téléphone est requis',
-            'phone_number.regex' => 'Le numéro doit commencer par 05, 06 ou 04 et contenir 9 chiffres',
-        ]);
-
         $organizer = Auth::user()->organizer;
         
         if (!$organizer) {
             return back()->with('error', 'Profil organisateur introuvable.');
         }
         
-        // Vérifier le solde disponible
+        // Calculer le solde disponible et le maximum retirable
         $revenueData = $this->commissionService->calculateOrganizerTotalNetRevenue($organizer->id);
         // Seuls les retraits complétés sont déduits du solde
         $totalWithdrawn = Withdrawal::where('organizer_id', $organizer->id)
@@ -193,9 +187,28 @@ class WithdrawalController extends Controller
             ->sum('amount');
         
         $availableBalance = $revenueData['net_revenue'] - $totalWithdrawn;
+        // Le maximum retirable est le minimum entre le solde disponible et la limite système
+        $maxWithdrawableAmount = min($availableBalance, self::MAX_WITHDRAWAL_AMOUNT);
+        
+        $request->validate([
+            'amount' => 'required|numeric|min:100|max:' . $maxWithdrawableAmount,
+            'payment_method' => 'required|in:MTN Mobile Money,Airtel Money',
+            'phone_number' => ['required', 'string', 'regex:/^0(4|5|6)\d{7}$/'],
+        ], [
+            'amount.required' => 'Le montant est requis',
+            'amount.min' => 'Le montant minimum est de 100 FCFA',
+            'amount.max' => 'Le montant maximum est de ' . number_format($maxWithdrawableAmount, 0, ',', ' ') . ' FCFA (limite système: ' . number_format(self::MAX_WITHDRAWAL_AMOUNT, 0, ',', ' ') . ' FCFA par transaction)',
+            'payment_method.required' => 'La méthode de paiement est requise',
+            'phone_number.required' => 'Le numéro de téléphone est requis',
+            'phone_number.regex' => 'Le numéro doit commencer par 05, 06 ou 04 et contenir 9 chiffres',
+        ]);
 
-        if ($request->amount > $availableBalance) {
-            return back()->with('error', 'Solde insuffisant. Votre solde disponible est de ' . number_format($availableBalance, 0, ',', ' ') . ' FCFA');
+        if ($request->amount > $maxWithdrawableAmount) {
+            if ($availableBalance > self::MAX_WITHDRAWAL_AMOUNT) {
+                return back()->with('error', 'Le montant maximum par transaction est de ' . number_format(self::MAX_WITHDRAWAL_AMOUNT, 0, ',', ' ') . ' FCFA. Vous devrez effectuer plusieurs retraits pour retirer tout votre solde de ' . number_format($availableBalance, 0, ',', ' ') . ' FCFA.');
+            } else {
+                return back()->with('error', 'Solde insuffisant. Votre solde disponible est de ' . number_format($availableBalance, 0, ',', ' ') . ' FCFA');
+            }
         }
 
         DB::beginTransaction();

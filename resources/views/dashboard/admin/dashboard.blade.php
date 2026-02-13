@@ -95,14 +95,14 @@
     }
 
     .stat-card .card-body {
-        padding: 1.5rem;
+        padding: 1rem 1.25rem;
         position: relative;
         z-index: 2;
     }
 
-    /* Icônes animées */
+    /* Icônes animées - Taille réduite */
     .stat-icon {
-        font-size: 2.5rem;
+        font-size: 2rem;
         opacity: 1;
         transition: var(--transition);
         position: relative;
@@ -113,7 +113,7 @@
 
     .stat-card:hover .stat-icon {
         opacity: 1 !important;
-        transform: scale(1.1);
+        transform: scale(1.08);
     }
     
     /* Ensure stat-card content is visible */
@@ -141,17 +141,17 @@
     .text-danger { color: var(--danger) !important; }
     .text-secondary { color: var(--gray-500) !important; }
 
-    /* En-tête amélioré */
-    /* En-tête plus blanc, moins de rouge */
+    /* En-tête amélioré - Barre en bleu */
     .dashboard-header {
-        background: #ffffff;
-        color: #111111;
-        border: 1px solid rgba(153,27,27,0.12);
+        background: linear-gradient(135deg, var(--bleu-nuit) 0%, var(--bleu-nuit-clair) 100%);
+        color: #ffffff;
+        border: none;
         border-radius: var(--border-radius);
         padding: 1.5rem;
         margin-bottom: 2rem;
         position: relative;
         overflow: hidden;
+        box-shadow: var(--shadow-lg);
     }
 
     .dashboard-header::before {
@@ -161,8 +161,8 @@
         right: -20%;
         width: 200px;
         height: 200px;
-        background: var(--blanc-or);
-        opacity: 0.1;
+        background: rgba(255, 255, 255, 0.1);
+        opacity: 0.3;
         border-radius: 50%;
         transform: rotate(45deg);
     }
@@ -173,16 +173,16 @@
         margin-bottom: 0.5rem;
         position: relative;
         z-index: 2;
-        color: #111111 !important;
+        color: #ffffff !important;
     }
 
     .dashboard-header p {
         font-size: 1.1rem;
-        opacity: 0.9;
+        opacity: 0.95;
         margin: 0;
         position: relative;
         z-index: 2;
-        color: #6b7280 !important;
+        color: rgba(255, 255, 255, 0.9) !important;
     }
 
     /* Sidebar admin en bleu avec texte blanc et icônes blanches */
@@ -266,6 +266,29 @@
         color: #ffffff !important;
     }
 
+    /* Boutons blancs pour "Générer un rapport" et "Voir les logs" */
+    .generate-report-btn.btn-white {
+        background: #ffffff !important;
+        color: var(--bleu-nuit, #0f1a3d) !important;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .generate-report-btn.btn-white i {
+        color: var(--bleu-nuit, #0f1a3d) !important;
+    }
+
+    .generate-report-btn.btn-white:hover {
+        background: rgba(255, 255, 255, 0.95) !important;
+        color: var(--bleu-nuit-clair, #1a237e) !important;
+        border-color: rgba(255, 255, 255, 0.5);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+    }
+    
+    .generate-report-btn.btn-white:hover i {
+        color: var(--bleu-nuit-clair, #1a237e) !important;
+    }
+
     /* Cartes de graphiques améliorées */
     .chart-card {
         border-radius: var(--border-radius);
@@ -315,38 +338,113 @@
         padding: 1rem;
     }
 
-    /* Section des activités récentes - cartes réduites */
-    .activity-item {
-        border-left: 3px solid var(--bleu-nuit);
-        background: var(--white);
-        border-radius: 0.5rem;
-        padding: 0.75rem;
-        margin-bottom: 0.5rem;
-        box-shadow: var(--shadow-sm);
+    /* Tableau des activités récentes */
+    .activities-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .activities-table thead {
+        background: var(--gray-50);
+        border-bottom: 2px solid var(--gray-200);
+    }
+
+    .activities-table th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--gray-700) !important;
+        border-bottom: 2px solid var(--gray-200);
+    }
+
+    .activities-table tbody tr {
+        border-bottom: 1px solid var(--gray-200);
         transition: var(--transition);
     }
 
-    .activity-item:hover {
-        transform: translateX(4px);
-        box-shadow: var(--shadow-lg);
+    .activities-table tbody tr:hover {
+        background: var(--gray-50);
     }
 
-    .activity-description {
+    .activities-table tbody tr:last-child {
+        border-bottom: none;
+    }
+
+    .activities-table td {
+        padding: 1rem;
+        vertical-align: middle;
+        color: var(--gray-800) !important;
+    }
+
+    .activity-icon-cell {
+        width: 50px;
+        text-align: center;
+    }
+
+    .activity-icon-table {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--bleu-nuit) 0%, var(--bleu-nuit-clair) 100%);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 6px rgba(15, 26, 61, 0.15);
+    }
+
+    .activity-icon-table i {
+        color: #ffffff !important;
+        font-size: 0.875rem;
+    }
+
+    .activity-description-cell {
         font-weight: 600;
         color: #000000 !important;
-        margin-bottom: 0.2rem;
-        font-size: 0.9rem;
+        font-size: 0.95rem;
     }
 
-    .activity-user {
+    .activity-user-cell {
         color: var(--gray-600) !important;
-        font-size: 0.85rem;
-        margin-bottom: 0.2rem;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 
-    .activity-meta {
+    .activity-user-cell i {
+        color: var(--bleu-nuit) !important;
         font-size: 0.75rem;
+    }
+
+    .activity-time-cell {
+        color: var(--gray-500) !important;
+        font-size: 0.875rem;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .activity-properties-cell {
+        font-size: 0.8rem;
         color: var(--gray-600) !important;
+    }
+
+    .activity-properties-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        background: var(--gray-100);
+        border-radius: 0.375rem;
+        font-size: 0.75rem;
+        margin-right: 0.5rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .activity-properties-badge strong {
+        color: var(--bleu-nuit) !important;
+        font-weight: 600;
+        margin-right: 0.25rem;
     }
     
     /* Textes en noir pour les statistiques */
@@ -426,7 +524,7 @@
         }
         
         .stat-card .card-body {
-            padding: 1.25rem;
+            padding: 1rem;
         }
         
         .chart-area, .chart-pie {
@@ -452,13 +550,17 @@
         }
         
         .stat-card .card-body {
-            padding: 1rem;
+            padding: 0.875rem;
             text-align: center;
         }
         
         .stat-icon {
-            font-size: 2rem;
+            font-size: 1.75rem;
             margin-bottom: 0.5rem;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
         }
         
         .chart-area, .chart-pie {
@@ -479,6 +581,14 @@
             padding: 0.75rem;
         }
         
+        .stat-number {
+            font-size: 1.75rem;
+        }
+        
+        .stat-icon {
+            font-size: 1.5rem;
+        }
+        
         .chart-area, .chart-pie {
             height: 12rem;
         }
@@ -486,17 +596,40 @@
         .chart-card .card-header {
             padding: 0.75rem 1rem;
         }
+        
+        /* Tableau activités récentes responsive */
+        .activities-table {
+            font-size: 0.875rem;
+        }
+        
+        .activities-table th,
+        .activities-table td {
+            padding: 0.75rem 0.5rem;
+        }
+        
+        .activities-table th:nth-child(4),
+        .activities-table td:nth-child(4) {
+            display: none;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .activities-table th:nth-child(3),
+        .activities-table td:nth-child(3) {
+            display: none;
+        }
     }
 
-    /* Animations et micro-interactions */
+    /* Animations et micro-interactions - Nombres plus grands */
     .stat-number {
-        font-size: 2rem;
+        font-size: 2.5rem;
         font-weight: 700;
         transition: var(--transition);
         color: #000000 !important;
+        line-height: 1.2;
     }
 
-    /* Tous les stat-numbers en noir */
+    /* Tous les stat-numbers en noir - Nombres plus grands */
     .stat-number:not([class*="text-"]),
     .stat-number.text-success,
     .stat-number.text-info,
@@ -506,18 +639,20 @@
         -webkit-text-fill-color: #000000 !important;
         background: none !important;
         color: #000000 !important;
+        font-size: 2.5rem;
     }
 
     .stat-card:hover .stat-number {
-        transform: scale(1.05);
+        transform: scale(1.03);
     }
 
     .stat-label {
         font-size: 0.75rem;
-        font-weight: 700;
+        font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 0.5px;
         margin-bottom: 0.5rem;
+        opacity: 0.8;
     }
 
     /* Loader personnalisé */
@@ -593,11 +728,11 @@
                 <i class="fas fa-money-bill-transfer"></i>
                 Gérer les retraits
             </a>
-            <a href="{{ route('admin.reports.index') }}" class="generate-report-btn">
+            <a href="{{ route('admin.reports.index') }}" class="generate-report-btn btn-white">
                 <i class="fas fa-download"></i>
                 Générer un rapport
             </a>
-            <a href="{{ url('/log-viewer') }}" class="generate-report-btn" style="background-color: #6b7280; border-color: #6b7280;">
+            <a href="{{ url('/log-viewer') }}" class="generate-report-btn btn-white">
                 <i class="fas fa-file-alt"></i>
                 Voir les logs
             </a>
@@ -818,36 +953,80 @@
             <div class="card-header">
                 <h6><i class="fas fa-history me-2"></i>Activités récentes</h6>
             </div>
-            <div class="card-body">
-                @forelse(collect($recentActivities)->take(5) as $activity)
-                    <div class="activity-item">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div class="flex-grow-1">
-                                <div class="activity-description">{{ $activity['description'] }}</div>
-                                <div class="activity-user">Par {{ $activity['user_name'] }}</div>
-                                @if(!empty($activity['properties']))
-                                    <div class="activity-meta">
-                                        @foreach($activity['properties'] as $key => $value)
-                                            <span class="me-3" style="color: var(--gray-600);">
-                                                <strong style="color: #000000;">{{ ucfirst($key) }}:</strong> 
-                                                {{ is_array($value) ? json_encode($value) : $value }}
-                                            </span>
-                                        @endforeach
-                                    </div>
-                                @endif
-                            </div>
-                            <small class="text-muted">{{ $activity['created_at']->diffForHumans() }}</small>
-                        </div>
-                    </div>
-                @empty
-                    <div class="text-center py-5">
-                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">Aucune activité récente</p>
-                    </div>
-                @endforelse
+            <div class="card-body" style="padding: 0;">
+                <div class="table-responsive">
+                    <table class="activities-table">
+                        <thead>
+                            <tr>
+                                <th class="activity-icon-cell"></th>
+                                <th>Description</th>
+                                <th>Utilisateur</th>
+                                <th>Propriétés</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse(collect($recentActivities)->take(5) as $activity)
+                                <tr>
+                                    <td class="activity-icon-cell">
+                                        <div class="activity-icon-table">
+                                            @if(str_contains(strtolower($activity['description'] ?? ''), 'créé') || str_contains(strtolower($activity['description'] ?? ''), 'création'))
+                                                <i class="fas fa-plus-circle"></i>
+                                            @elseif(str_contains(strtolower($activity['description'] ?? ''), 'modifié') || str_contains(strtolower($activity['description'] ?? ''), 'mise à jour'))
+                                                <i class="fas fa-edit"></i>
+                                            @elseif(str_contains(strtolower($activity['description'] ?? ''), 'supprimé') || str_contains(strtolower($activity['description'] ?? ''), 'suppression'))
+                                                <i class="fas fa-trash-alt"></i>
+                                            @elseif(str_contains(strtolower($activity['description'] ?? ''), 'paiement') || str_contains(strtolower($activity['description'] ?? ''), 'payé'))
+                                                <i class="fas fa-money-bill-wave"></i>
+                                            @elseif(str_contains(strtolower($activity['description'] ?? ''), 'retrait') || str_contains(strtolower($activity['description'] ?? ''), 'withdrawal'))
+                                                <i class="fas fa-hand-holding-usd"></i>
+                                            @else
+                                                <i class="fas fa-circle"></i>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td class="activity-description-cell">
+                                        {{ $activity['description'] }}
+                                    </td>
+                                    <td>
+                                        <div class="activity-user-cell">
+                                            <i class="fas fa-user"></i>
+                                            <span>{{ $activity['user_name'] }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="activity-properties-cell">
+                                        @if(!empty($activity['properties']))
+                                            @foreach($activity['properties'] as $key => $value)
+                                                <span class="activity-properties-badge">
+                                                    <strong>{{ ucfirst($key) }}:</strong>
+                                                    {{ is_array($value) ? json_encode($value) : (strlen($value) > 30 ? substr($value, 0, 30) . '...' : $value) }}
+                                                </span>
+                                            @endforeach
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="activity-time-cell">
+                                        <i class="fas fa-clock me-1"></i>
+                                        {{ $activity['created_at']->diffForHumans() }}
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="text-center py-5">
+                                        <div class="mb-3">
+                                            <i class="fas fa-inbox fa-3x" style="color: var(--gray-400) !important;"></i>
+                                        </div>
+                                        <p class="text-muted mb-0">Aucune activité récente</p>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
                 
                 @if(count($recentActivities) > 5)
-                    <div class="text-center mt-3">
+                    <div class="text-center p-3 border-top">
                         <a href="{{ route('admin.activities.index') }}" class="btn btn-primary" style="text-decoration: none !important;">
                             <i class="fas fa-eye me-2" style="color: #ffffff !important;"></i>Voir plus
                         </a>

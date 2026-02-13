@@ -72,10 +72,10 @@
                 <div class="bg-light rounded p-4 mb-4 wow fadeInUp" data-wow-delay="0.3s">
                     <h5 class="mb-3">Liens Rapides</h5>
                     <ul class="list-unstyled">
-                        <li><a href="{{ route('faq.index') }}">FAQ</a></li>
-                        <li><a href="{{ route('contact.index') }}">Nous Contacter</a></li>
-                        <li><a href="{{ route('legal.terms') }}">Conditions d'utilisation</a></li>
-                        <li><a href="{{ route('legal.privacy') }}">Politique de confidentialité</a></li>
+                        <li><a href="{{ route('faq') }}">FAQ</a></li>
+                        <li><a href="{{ route('contact') }}">Nous Contacter</a></li>
+                        <li><a href="{{ route('terms') }}">Conditions d'utilisation</a></li>
+                        <li><a href="{{ route('privacy') }}">Politique de confidentialité</a></li>
                     </ul>
                 </div>
             </div>

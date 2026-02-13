@@ -3,7 +3,7 @@
 
 Cher(e) {{ $order->user->name }},
 
-Nous sommes désolés de vous informer que le paiement pour votre commande n'a pas pu être traité.
+Nous sommes désolés de vous informer que le paiement pour votre reservation n'a pas pu être traité.
 
 **Événement :** {{ $order->event->title }}  
 **Montant :** {{ number_format($order->total_amount, 0, ',', ' ') }} FCFA

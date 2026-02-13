@@ -14,18 +14,29 @@ class AdminTicketController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Ticket::with(['event', 'user']);
+        $query = Ticket::with(['event.user', 'event.organizer']);
 
         if ($request->has('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('ticket_code', 'like', "%{$search}%")
-                  ->orWhere('ticket_type', 'like', "%{$search}%");
+                $q->where('nom', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhereHas('event', function($eventQuery) use ($search) {
+                      $eventQuery->where('title', 'like', "%{$search}%");
+                  });
             });
         }
 
         if ($request->has('status')) {
-            $query->where('is_used', $request->status === 'used');
+            if ($request->status === 'available') {
+                $query->whereColumn('quantite', '>', 'quantite_vendue');
+            } elseif ($request->status === 'sold_out') {
+                $query->whereColumn('quantite', '<=', 'quantite_vendue');
+            }
+        }
+
+        if ($request->has('event_id')) {
+            $query->where('event_id', $request->event_id);
         }
 
         $tickets = $query->latest()->paginate(10);
@@ -139,7 +150,7 @@ public function removePromotion(Ticket $ticket)
             'event.category',
             'event.organizer',
             'event.user',
-            'user'
+            'orders.user'
         ]);
 
         return view('dashboard.admin.tickets.show', compact('ticket'));

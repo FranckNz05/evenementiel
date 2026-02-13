@@ -85,12 +85,12 @@
                     <table class="table table-hover align-middle">
                         <thead>
                             <tr>
-                                <th>Date</th>
-                                <th>Montant</th>
-                                <th>Méthode</th>
-                                <th>Téléphone</th>
-                                <th>Statut</th>
-                                <th>Actions</th>
+                                <th style="color: #000;">Date</th>
+                                <th style="color: #000;">Montant</th>
+                                <th style="color: #000;">Méthode</th>
+                                <th style="color: #000;">Téléphone</th>
+                                <th style="color: #000;">Statut</th>
+                                <th style="color: #000;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>

@@ -226,6 +226,11 @@
     font-family: monospace;
 }
 
+.text-bleu-nuit {
+    color: #191970 !important;
+}
+
+
 @media (max-width: 768px) {
     .withdrawal-detail-page {
         padding: 1rem;
@@ -248,14 +253,14 @@
     <div class="page-header">
         <div class="page-title-section">
             <h1>
-                <i class="fas fa-money-bill-wave me-2"></i>
                 Détails du retrait
             </h1>
             <p>Informations complètes sur la demande de retrait</p>
         </div>
         <div class="page-actions">
-            <a href="{{ route('admin.withdrawals.index') }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i>
+            <a href="{{ route('admin.withdrawals.index') }}" 
+               class="btn btn-secondary text-bleu-nuit">
+                <i class="fas fa-arrow-left me-2"></i>
                 Retour à la liste
             </a>
         </div>
@@ -423,7 +428,7 @@
         </div>
         <div class="card-body">
             <div class="details-section">
-                <pre style="background: var(--gray-900); color: #10b981; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; font-size: 0.75rem; margin: 0;">{{ json_encode(json_decode($withdrawal->details), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
+                <pre style="background: var(--gray-900); color: #10b981; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; font-size: 0.75rem; margin: 0;">{{ json_encode($withdrawal->details, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}</pre>
             </div>
         </div>
     </div>

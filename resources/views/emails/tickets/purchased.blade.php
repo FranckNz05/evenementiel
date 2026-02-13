@@ -1,9 +1,9 @@
 @component('mail::message')
-# Confirmation de votre commande
+# Confirmation de votre reservation
 
 Cher(e) {{ $order->user->name }},
 
-Nous vous remercions pour votre commande sur MokiliEvent. Voici les détails de votre achat :
+Nous vous remercions pour votre reservation sur MokiliEvent. Voici les détails de votre achat :
 
 **Événement :** {{ $order->event->title }}  
 **Date :** {{ $order->event->start_date->format('d/m/Y H:i') }}  
@@ -16,7 +16,7 @@ Vos billets sont joints à cet email. Vous pouvez également les retrouver dans 
 @endcomponent
 
 @component('mail::button', ['url' => route('orders.show', $order)])
-Voir ma commande
+Voir ma reservation
 @endcomponent
 
 Merci de votre confiance,<br>

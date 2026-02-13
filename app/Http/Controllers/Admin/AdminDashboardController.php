@@ -631,6 +631,28 @@ class AdminDashboardController extends Controller
     public function updateSettings(Request $request)
     {
         try {
+            // Validation personnalisée pour le favicon (accepte .ico, .png, .jpg, .jpeg)
+            $faviconRules = ['nullable', 'file', 'max:1024'];
+            $faviconRules[] = function ($attribute, $value, $fail) {
+                if ($value) {
+                    $extension = strtolower($value->getClientOriginalExtension());
+                    $mimeType = $value->getMimeType();
+                    $allowedExtensions = ['ico', 'png', 'jpg', 'jpeg'];
+                    $allowedMimeTypes = [
+                        'image/x-icon',
+                        'image/vnd.microsoft.icon',
+                        'image/png',
+                        'image/jpeg',
+                        'image/jpg',
+                        'application/octet-stream' // Certains fichiers .ico peuvent avoir ce type MIME
+                    ];
+                    
+                    if (!in_array($extension, $allowedExtensions) && !in_array($mimeType, $allowedMimeTypes)) {
+                        $fail('Le fichier favicon doit être au format .ico, .png, .jpg ou .jpeg.');
+                    }
+                }
+            };
+            
             $validated = $request->validate([
                 'site_name' => 'required|string|max:255',
                 'site_description' => 'nullable|string|max:1000',
@@ -643,7 +665,7 @@ class AdminDashboardController extends Controller
                 'tiktok_url' => 'nullable|url|max:255',
                 'maintenance_mode' => 'nullable|boolean',
                 'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-                'favicon' => 'nullable|image|mimes:ico,png|max:1024',
+                'favicon' => $faviconRules,
             ]);
 
             // Mise à jour des paramètres dans la table settings

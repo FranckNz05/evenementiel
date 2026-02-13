@@ -3,41 +3,14 @@
 @section('title', 'Gestion des blogs')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/admin-pagination.css') }}">
 <style>
-/* Variables CSS pour design cohérent */
-/* ===============================================
-   SYSTÈME DE DESIGN - BLEU NUIT & blanc OR
-   Design Premium avec Excellence UX/UI
-   =============================================== */
-
 :root {
-    /* Palette Principale - Bleu MokiliEvent & blanc Or */
-    --bleu-nuit: #0f1a3d;
-    --bleu-nuit-clair: #1a237e;
-    --bleu-nuit-lighter: #2c3e8f;
-    --bleu-royal: #3b4f9a;
-    --bleu-soft: #5a6ba8;
-    --bleu-light: #7c8db8;
-    
-    --blanc-or: #ffffff;
-    --blanc-or-light: #ffe44d;
-    --blanc-or-dark: #e6c200;
-    --blanc-amber: #ffb700;
-    --blanc-warm: #ffdb58;
-    
-    /* Couleurs d'état */
+    --primary: #0f1a3d;
+    --primary-light: #1a237e;
     --success: #10b981;
-    --success-bg: #d1fae5;
-    --warning: #ffd700;
-    --warning-bg: #fff8dc;
+    --warning: #f59e0b;
     --danger: #ef4444;
-    --danger-bg: #fee2e2;
     --info: #3b82f6;
-    --info-bg: #dbeafe;
-    
-    /* Nuances neutres */
-    --white: #ffffff;
     --gray-50: #f9fafb;
     --gray-100: #f3f4f6;
     --gray-200: #e5e7eb;
@@ -47,489 +20,1234 @@
     --gray-600: #4b5563;
     --gray-700: #374151;
     --gray-800: #1f2937;
-    
-    /* Ombres et effets */
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    --shadow-gold: 0 10px 25px -5px rgba(255, 215, 0, 0.3);
-    --shadow-blue: 0 10px 25px -5px rgba(15, 26, 61, 0.3);
-    
-    --border-radius: 0.75rem;
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --gray-900: #111827;
 }
 
-/* Container principal */
-.container-fluid {
-    padding: 1rem;
-    max-width: 1600px;
-    margin: 0 auto;
-    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+.blogs-page {
     min-height: 100vh;
-    position: relative;
+    background: var(--gray-50);
+    padding: 2rem;
 }
 
-.container-fluid::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, var(--bleu-nuit), var(--blanc-or), var(--bleu-nuit-clair));
-    z-index: 1;
-}
-
-/* En-tête de page */
+/* Header - Section bleue */
 .page-header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    border-radius: 0.75rem;
+    padding: 1.5rem 2rem;
+    margin-bottom: 2rem;
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    padding: 1.5rem;
-    background: linear-gradient(135deg, var(--bleu-nuit) 0%, var(--bleu-nuit-clair) 100%);
-    border-radius: var(--border-radius);
-    color: white;
-    position: relative;
-    overflow: hidden;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1rem;
+    box-shadow: 0 4px 12px rgba(15, 26, 61, 0.15);
 }
 
-.page-header::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -20%;
-    width: 200px;
-    height: 200px;
-    background: var(--blanc-or);
-    opacity: 0.1;
-    border-radius: 50%;
-    transform: rotate(45deg);
-}
-
-.page-title {
-    font-size: 1.875rem;
+.page-title-section h1 {
+    font-size: 2rem;
     font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 0.5rem 0;
+}
+
+.page-title-section p {
+    color: rgba(255, 255, 255, 0.9);
     margin: 0;
-    position: relative;
-    z-index: 2;
 }
 
 .page-actions {
     display: flex;
-    gap: 1rem;
-    position: relative;
-    z-index: 2;
-}
-
-/* Cartes modernes */
-.modern-card {
-    background: var(--white);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-lg);
-    border: none;
-    overflow: hidden;
-    transition: var(--transition);
-}
-
-.modern-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-xl);
-}
-
-.card-header-modern {
-    background: linear-gradient(135deg, var(--bleu-nuit) 0%, var(--bleu-nuit-clair) 100%);
-    border-bottom: 3px solid var(--blanc-or);
-    padding: 1.5rem;
-    color: white;
-}
-
-.card-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin: 0;
-    display: flex;
-    align-items: center;
     gap: 0.75rem;
+    flex-wrap: wrap;
 }
 
-.card-body-modern {
-    padding: 1.5rem;
-}
-
-/* Tableaux modernes */
-.modern-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.875rem;
-}
-
-.modern-table thead th {
-    background: linear-gradient(135deg, var(--bleu-nuit-light), var(--bleu-nuit));
-    color: var(--blanc-or);
-    padding: 1rem;
-    text-align: left;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border: none;
-}
-
-.modern-table tbody tr {
-    border-bottom: 1px solid var(--gray-200);
-    transition: var(--transition);
-}
-
-.modern-table tbody tr:hover {
-    background: var(--gray-50);
-    transform: scale(1.01);
-}
-
-.modern-table td {
-    padding: 1rem;
-    vertical-align: middle;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 200px;
-}
-
-/* Boutons modernes */
-.modern-btn {
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    font-weight: 600;
-    font-size: 0.875rem;
-    border: none;
-    cursor: pointer;
-    transition: var(--transition);
+.btn {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
     text-decoration: none;
 }
 
-.btn-primary-modern {
-    background: linear-gradient(135deg, var(--bleu-nuit), var(--bleu-nuit-clair));
-    color: var(--blanc-or);
-}
-
-.btn-primary-modern:hover {
-    background: linear-gradient(135deg, var(--bleu-nuit-clair), var(--bleu-nuit-lighter));
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-blue);
-}
-
-.btn-success-modern {
-    background: linear-gradient(135deg, var(--success), #059669);
+.btn-primary {
+    background: var(--primary);
     color: white;
 }
 
-.btn-success-modern:hover {
-    background: linear-gradient(135deg, #059669, #047857);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow);
+.btn-primary:hover {
+    background: var(--primary-light);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(15, 26, 61, 0.2);
 }
 
-.btn-warning-modern {
-    background: linear-gradient(135deg, var(--blanc-or), var(--blanc-or-dark));
-    color: var(--bleu-nuit);
+.btn-secondary {
+    background: white;
+    color: var(--primary);
+    border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
-.btn-warning-modern:hover {
-    background: linear-gradient(135deg, var(--blanc-or-dark), var(--blanc-amber));
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-gold);
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: var(--primary-light);
 }
 
-.btn-danger-modern {
-    background: linear-gradient(135deg, var(--danger), #dc2626);
+.btn-success {
+    background: var(--success);
     color: white;
 }
 
-.btn-danger-modern:hover {
-    background: linear-gradient(135deg, #dc2626, #b91c1c);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow);
+.btn-success:hover {
+    background: #059669;
 }
 
-.btn-sm-modern {
+.btn-warning {
+    background: var(--warning);
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #d97706;
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+}
+
+.btn-info {
+    background: var(--info);
+    color: white;
+}
+
+.btn-info:hover {
+    background: #2563eb;
+}
+
+.btn-sm {
     padding: 0.375rem 0.75rem;
     font-size: 0.75rem;
 }
 
-/* Badges modernes */
-.modern-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 50px;
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    border: 1px solid var(--gray-200);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s;
+}
+
+.stat-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.stat-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-number {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    line-height: 1.2;
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    font-weight: 500;
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--gray-100);
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    font-size: 1.25rem;
+    transition: all 0.2s;
+}
+
+.stat-card:hover .stat-icon {
+    background: var(--primary);
+    color: white;
+}
+
+.stat-card.primary .stat-number { color: var(--primary); }
+.stat-card.success .stat-number { color: var(--success); }
+.stat-card.warning .stat-number { color: var(--warning); }
+.stat-card.info .stat-number { color: var(--info); }
+
+/* Card */
+.card {
+    background: white;
+    border-radius: 0.75rem;
+    border: 1px solid var(--gray-200);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--gray-200);
+    background: var(--gray-50);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.card-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.card-title i {
+    color: var(--primary);
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Filters */
+.filters-section {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    border: 1px solid var(--gray-200);
+    margin-bottom: 1.5rem;
+}
+
+.filters-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+@media (min-width: 768px) {
+    .filters-row {
+        flex-wrap: nowrap;
+    }
+}
+
+.filter-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filter-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--gray-700);
+}
+
+.search-input-group {
+    position: relative;
+    display: flex;
+    width: 100%;
+}
+
+.search-input-group .form-control {
+    flex: 1;
+    padding: 0.625rem 0.875rem;
+    padding-left: 2.5rem;
+    border: 1px solid var(--gray-300);
+    border-radius: 0.5rem 0 0 0.5rem;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+
+.search-input-group .form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(15, 26, 61, 0.1);
+    z-index: 1;
+}
+
+.search-input-group .btn {
+    border-radius: 0 0.5rem 0.5rem 0;
+    margin-left: -1px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 0.875rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray-400);
+    pointer-events: none;
+    z-index: 2;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid var(--gray-300);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    background: white;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(15, 26, 61, 0.1);
+}
+
+/* Table */
+.table-wrapper {
+    overflow-x: auto;
+}
+
+.blogs-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.blogs-table thead {
+    background: var(--gray-50);
+}
+
+.blogs-table thead th {
+    padding: 0.875rem 1rem;
+    text-align: left;
     font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.05em;
+    color: var(--gray-600);
+    border-bottom: 2px solid var(--gray-200);
+    white-space: nowrap;
 }
 
-.badge-success {
-    background: var(--success-bg);
-    color: var(--success);
+.blogs-table tbody tr {
+    border-bottom: 1px solid var(--gray-200);
+    transition: background 0.15s;
 }
 
-.badge-warning {
-    background: var(--warning-bg);
-    color: var(--blanc-or);
+.blogs-table tbody tr:hover {
+    background: var(--gray-50);
 }
 
-.badge-danger {
-    background: var(--danger-bg);
-    color: var(--danger);
+.blogs-table tbody td {
+    padding: 1.25rem 1rem;
+    font-size: 0.875rem;
+    color: var(--gray-900);
+    vertical-align: middle;
 }
 
-.badge-info {
-    background: var(--info-bg);
-    color: var(--info);
-}
-
-/* Images de blog */
+/* Blog Image */
 .blog-image {
     width: 50px;
     height: 50px;
     object-fit: cover;
-    border-radius: var(--border-radius);
-    border: 2px solid var(--gray-200);
+    border-radius: 0.5rem;
+    border: 1px solid var(--gray-200);
 }
 
 .blog-image-placeholder {
     width: 50px;
     height: 50px;
-    background: linear-gradient(135deg, var(--gray-100), var(--gray-200));
-    border-radius: var(--border-radius);
+    border-radius: 0.5rem;
+    background: var(--gray-100);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--gray-500);
-    border: 2px solid var(--gray-200);
+    color: var(--gray-400);
+    font-size: 1.25rem;
+    border: 1px solid var(--gray-200);
 }
 
-/* Responsive Design */
+/* Blog Info */
+.blog-title {
+    font-weight: 600;
+    color: var(--gray-900);
+    margin-bottom: 0.25rem;
+}
+
+.blog-excerpt {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Author Info */
+.author-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.author-name {
+    font-weight: 600;
+    color: var(--gray-900);
+    font-size: 0.875rem;
+}
+
+.author-email {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+}
+
+/* Category Badge */
+.category-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: var(--info-bg);
+    color: #1e40af;
+    border: 1px solid var(--info);
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.status-active {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #10b981;
+}
+
+.status-deleted {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #ef4444;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.375rem;
+    border: 1px solid var(--gray-300);
+    background: white;
+    color: var(--gray-600);
+    transition: all 0.2s;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.action-btn:hover {
+    background: var(--gray-50);
+    border-color: var(--gray-400);
+    color: var(--gray-900);
+}
+
+.action-btn.primary:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+.action-btn.success:hover {
+    background: var(--success);
+    border-color: var(--success);
+    color: white;
+}
+
+.action-btn.warning:hover {
+    background: var(--warning);
+    border-color: var(--warning);
+    color: white;
+}
+
+.action-btn.danger:hover {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: white;
+}
+
+.action-btn.info:hover {
+    background: var(--info);
+    border-color: var(--info);
+    color: white;
+}
+
+/* Categories Table */
+.categories-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.categories-table thead {
+    background: var(--gray-50);
+}
+
+.categories-table thead th {
+    padding: 0.875rem 1rem;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--gray-600);
+    border-bottom: 2px solid var(--gray-200);
+}
+
+.categories-table tbody tr {
+    border-bottom: 1px solid var(--gray-200);
+    transition: background 0.15s;
+}
+
+.categories-table tbody tr:hover {
+    background: var(--gray-50);
+}
+
+.categories-table tbody td {
+    padding: 1rem;
+    font-size: 0.875rem;
+    color: var(--gray-900);
+    vertical-align: middle;
+}
+
+.category-name {
+    font-weight: 600;
+    color: var(--gray-900);
+    margin-bottom: 0.25rem;
+}
+
+.category-slug {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+    font-family: monospace;
+}
+
+.category-description {
+    font-size: 0.8125rem;
+    color: var(--gray-600);
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.articles-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    height: 2rem;
+    padding: 0 0.5rem;
+    background: var(--gray-100);
+    border-radius: 9999px;
+    color: var(--gray-700);
+    font-weight: 600;
+    font-size: 0.75rem;
+    border: 1px solid var(--gray-200);
+}
+
+/* Modal */
+.modal-content {
+    border: none;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    padding: 1.25rem 1.5rem;
+    border-bottom: none;
+}
+
+.modal-title {
+    color: white;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.modal-title i {
+    color: white;
+}
+
+.modal-header .btn-close {
+    color: white;
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+}
+
+.modal-header .btn-close:hover {
+    opacity: 1;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--gray-200);
+    background: var(--gray-50);
+}
+
+/* Alert */
+.alert {
+    padding: 1rem 1.25rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    border-left: 4px solid;
+}
+
+.alert-success {
+    background: #d1fae5;
+    border-left-color: #059669;
+    color: #065f46;
+}
+
+.alert-danger {
+    background: #fee2e2;
+    border-left-color: #dc2626;
+    color: #991b1b;
+}
+
+.alert i {
+    font-size: 1rem;
+}
+
+.alert .btn-close {
+    margin-left: auto;
+    background: transparent;
+    border: none;
+    color: currentColor;
+    opacity: 0.7;
+    cursor: pointer;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.empty-icon {
+    font-size: 3rem;
+    color: var(--gray-400);
+    margin-bottom: 1rem;
+}
+
+.empty-text {
+    color: var(--gray-600);
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.empty-description {
+    color: var(--gray-500);
+    font-size: 0.875rem;
+}
+
+/* Pagination */
+.pagination-wrapper {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: center;
+}
+
+.pagination {
+    display: flex;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+}
+
+.pagination .page-item .page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.25rem;
+    height: 2.25rem;
+    padding: 0 0.5rem;
+    border: 1px solid var(--gray-300);
+    background: white;
+    color: var(--gray-700);
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.pagination .page-item.active .page-link {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+.pagination .page-item .page-link:hover {
+    background: var(--gray-50);
+    border-color: var(--gray-400);
+}
+
+.pagination .page-item.disabled .page-link {
+    background: var(--gray-100);
+    color: var(--gray-400);
+    cursor: not-allowed;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-    .container-fluid {
-        padding: 0.5rem;
+    .blogs-page {
+        padding: 1rem;
     }
     
     .page-header {
         flex-direction: column;
-        align-items: stretch;
-        gap: 1rem;
-        padding: 1rem;
     }
     
-    .page-title {
-        font-size: 1.5rem;
+    .stats-grid {
+        grid-template-columns: 1fr;
     }
     
-    .page-actions {
-        width: 100%;
-        justify-content: stretch;
-        flex-wrap: wrap;
-    }
-    
-    .modern-table {
+    .blogs-table {
         font-size: 0.75rem;
     }
     
-    .modern-table th,
-    .modern-table td {
-        padding: 0.5rem;
+    .blogs-table thead th,
+    .blogs-table tbody td {
+        padding: 0.75rem 0.5rem;
+    }
+    
+    .filters-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .search-input-group {
+        width: 100%;
     }
 }
 
-@media (max-width: 480px) {
-    .modern-table {
-        font-size: 0.7rem;
-    }
-    
-    .modern-table th,
-    .modern-table td {
-        padding: 0.375rem;
-    }
-    
-    .modern-btn {
-        padding: 0.375rem 0.5rem;
-        font-size: 0.75rem;
-    }
+/* Text utilities */
+.text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.text-muted {
+    color: var(--gray-500) !important;
+}
+
+.d-flex {
+    display: flex;
+}
+
+.align-items-center {
+    align-items: center;
+}
+
+.justify-content-between {
+    justify-content: space-between;
+}
+
+.justify-content-end {
+    justify-content: flex-end;
+}
+
+.justify-content-center {
+    justify-content: center;
+}
+
+.gap-2 {
+    gap: 0.5rem;
+}
+
+.gap-3 {
+    gap: 1rem;
+}
+
+.mt-1 {
+    margin-top: 0.25rem;
+}
+
+.mt-2 {
+    margin-top: 0.5rem;
+}
+
+.mt-3 {
+    margin-top: 1rem;
+}
+
+.mt-4 {
+    margin-top: 1.5rem;
+}
+
+.mb-2 {
+    margin-bottom: 0.5rem;
+}
+
+.mb-3 {
+    margin-bottom: 1rem;
+}
+
+.mb-4 {
+    margin-bottom: 1.5rem;
+}
+
+.me-1 {
+    margin-right: 0.25rem;
+}
+
+.me-2 {
+    margin-right: 0.5rem;
+}
+
+.ms-auto {
+    margin-left: auto;
+}
+
+.p-3 {
+    padding: 1rem;
+}
+
+.flex-wrap {
+    flex-wrap: wrap;
+}
+
+.w-100 {
+    width: 100%;
 }
 </style>
 @endpush
 
 @section('content')
-<div class="container-fluid">
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-
-    @if(session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
-    @endif
-
-    <!-- En-tête de page -->
+<div class="blogs-page">
+    <!-- Header -->
     <div class="page-header">
-        <h1 class="page-title">
-            <i class="fas fa-blog"></i>
-            Gestion des blogs
-        </h1>
+        <div class="page-title-section">
+            <h1>Gestion des blogs</h1>
+            <p>Gérez les articles de blog et leurs catégories</p>
+        </div>
         <div class="page-actions">
-            <a href="{{ route('admin.blogs.create') }}" class="modern-btn btn-primary-modern">
-                <i class="fas fa-plus"></i> Nouvel article
+            <a href="{{ route('admin.blogs.create') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                Nouvel article
+            </a>
+            <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Tableau de bord
             </a>
         </div>
     </div>
 
-    <!-- Liste des blogs -->
-    <div class="modern-card">
-        <div class="card-header-modern">
-            <h5 class="card-title">
-                <i class="fas fa-list"></i>
-                Liste des blogs ({{ $blogs->total() }})
-            </h5>
+    <!-- Statistiques -->
+    @php
+        $totalBlogs = $blogs instanceof \Illuminate\Pagination\LengthAwarePaginator ? $blogs->total() : (is_countable($blogs) ? count($blogs) : 0);
+        $totalCategories = $blog_categories instanceof \Illuminate\Pagination\LengthAwarePaginator ? $blog_categories->total() : (is_countable($blog_categories) ? count($blog_categories) : 0);
+        $activeBlogs = $blogs instanceof \Illuminate\Pagination\LengthAwarePaginator 
+            ? $blogs->where('deleted_at', null)->count() 
+            : (is_countable($blogs) ? collect($blogs)->where('deleted_at', null)->count() : 0);
+    @endphp
+
+    <div class="stats-grid">
+        <div class="stat-card primary">
+            <div class="stat-content">
+                <div class="stat-info">
+                    <div class="stat-number">{{ $totalBlogs }}</div>
+                    <div class="stat-label">Total articles</div>
+                </div>
+                <div class="stat-icon">
+                    <i class="fas fa-blog"></i>
+                </div>
+            </div>
         </div>
-        <div class="card-body-modern">
-            <div class="table-responsive">
-                <table class="modern-table">
+        <div class="stat-card success">
+            <div class="stat-content">
+                <div class="stat-info">
+                    <div class="stat-number">{{ $activeBlogs }}</div>
+                    <div class="stat-label">Articles actifs</div>
+                </div>
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+            </div>
+        </div>
+        <div class="stat-card info">
+            <div class="stat-content">
+                <div class="stat-info">
+                    <div class="stat-number">{{ $totalCategories }}</div>
+                    <div class="stat-label">Catégories</div>
+                </div>
+                <div class="stat-icon">
+                    <i class="fas fa-tags"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications -->
+    @if(session('success'))
+    <div class="alert alert-success">
+        <i class="fas fa-check-circle"></i>
+        <span>{{ session('success') }}</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div class="alert alert-danger">
+        <i class="fas fa-exclamation-circle"></i>
+        <span>{{ session('error') }}</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
+    <!-- Filtres -->
+    <div class="filters-section">
+        <form method="GET" action="{{ route('admin.blogs.index') }}" id="filtersForm">
+            <div class="filters-row">
+                <div class="filter-group">
+                    <label class="filter-label">Recherche</label>
+                    <div class="search-input-group">
+                        <i class="fas fa-search search-icon"></i>
+                        <input
+                            type="text"
+                            name="search"
+                            class="form-control"
+                            placeholder="Titre, contenu, auteur..."
+                            value="{{ request('search') }}"
+                            id="blogSearch"
+                        >
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Catégorie</label>
+                    <select name="category" class="form-select">
+                        <option value="">Toutes les catégories</option>
+                        @foreach($blog_categories ?? [] as $category)
+                            <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Statut</label>
+                    <select name="status" class="form-select">
+                        <option value="">Tous les statuts</option>
+                        <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Actif</option>
+                        <option value="deleted" {{ request('status') == 'deleted' ? 'selected' : '' }}>Supprimé</option>
+                    </select>
+                </div>
+                <div class="filter-group" style="flex: 0 0 auto;">
+                    <label class="filter-label">&nbsp;</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Filtrer
+                        </button>
+                        @if(request()->anyFilled(['search', 'category', 'status']))
+                        <a href="{{ route('admin.blogs.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i>
+                        </a>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Liste des articles -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title">
+                <i class="fas fa-blog"></i>
+                Articles de blog
+            </h5>
+            <span style="font-size: 0.875rem; color: var(--gray-600);">
+                {{ $totalBlogs }} résultat(s)
+                @if($blogs instanceof \Illuminate\Pagination\LengthAwarePaginator && $blogs->total() > 0)
+                    · Page {{ $blogs->currentPage() }}/{{ $blogs->lastPage() }}
+                @endif
+            </span>
+        </div>
+        <div class="card-body">
+            <div class="table-wrapper">
+                <table class="blogs-table">
                     <thead>
                         <tr>
-                            <th>Image</th>
+                            <th style="width: 60px;">Image</th>
                             <th>Titre</th>
                             <th>Catégorie</th>
                             <th>Auteur</th>
-                            <th>Date de création</th>
-                            <th>Statut</th>
-                            <th>Actions</th>
+                            <th>Date</th>
+                            <th style="text-align: center;">Statut</th>
+                            <th style="text-align: center;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($blogs as $blog)
-                            <tr>
-                                <td>
-                                    @if($blog->image)
-                                        <img src="{{ asset('storage/' . $blog->image) }}" alt="{{ $blog->title }}" class="blog-image">
-                                    @else
-                                        <div class="blog-image-placeholder">
-                                            <i class="fas fa-image"></i>
-                                        </div>
-                                    @endif
-                                </td>
-                                <td>
-                                    <div class="font-weight-bold">{{ $blog->title }}</div>
-                                    <small class="text-muted">{{ Str::limit($blog->content, 50) }}</small>
-                                </td>
-                                <td>
-                                    <span class="modern-badge badge-info">{{ $blog->blogcategories->name ?? 'Sans catégorie' }}</span>
-                                </td>
-                                <td>
-                                    <div class="font-weight-bold">{{ $blog->user->nom ?? 'Auteur non défini' }}</div>
-                                    <small class="text-muted">{{ $blog->user->email ?? 'Email non disponible' }}</small>
-                                </td>
-                                <td>{{ $blog->created_at->format('d/m/Y H:i') }}</td>
-                                <td>
-                                    @if($blog->deleted_at)
-                                        <span class="modern-badge badge-danger">Supprimé</span>
-                                    @else
-                                        <span class="modern-badge badge-success">Actif</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        <a href="{{ route('admin.blogs.show', $blog) }}" class="modern-btn btn-sm-modern" style="background: var(--info); color: white;" title="Voir">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="{{ route('admin.blogs.edit', $blog) }}" class="modern-btn btn-warning-modern btn-sm-modern" title="Modifier">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <button type="button" class="modern-btn btn-danger-modern btn-sm-modern delete-blog" data-id="{{ $blog->id }}" title="Supprimer">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                        <tr>
+                            <td>
+                                @if($blog->image)
+                                    <img src="{{ asset('storage/' . $blog->image) }}" 
+                                         alt="{{ $blog->title }}" 
+                                         class="blog-image"
+                                         onerror="this.src='{{ asset('images/default-blog.png') }}'; this.onerror=null;">
+                                @else
+                                    <div class="blog-image-placeholder">
+                                        <i class="fas fa-image"></i>
                                     </div>
-                                </td>
-                            </tr>
+                                @endif
+                            </td>
+                            <td>
+                                <div class="blog-title">{{ $blog->title }}</div>
+                                <div class="blog-excerpt" title="{{ strip_tags($blog->content) }}">
+                                    {{ Str::limit(strip_tags($blog->content), 50) }}
+                                </div>
+                            </td>
+                            <td>
+                                @if($blog->blogcategories)
+                                    <span class="category-badge">
+                                        <i class="fas fa-tag"></i>
+                                        {{ $blog->blogcategories->name }}
+                                    </span>
+                                @else
+                                    <span class="category-badge" style="background: var(--gray-200); color: var(--gray-700); border-color: var(--gray-400);">
+                                        <i class="fas fa-tag"></i>
+                                        Sans catégorie
+                                    </span>
+                                @endif
+                            </td>
+                            <td>
+                                <div class="author-info">
+                                    <span class="author-name">{{ $blog->user->nom ?? 'Auteur inconnu' }}</span>
+                                    <span class="author-email">{{ $blog->user->email ?? '' }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div style="font-size: 0.8125rem; color: var(--gray-600);">
+                                    {{ $blog->created_at ? $blog->created_at->format('d/m/Y') : 'N/A' }}
+                                    <div style="font-size: 0.75rem; color: var(--gray-500);">
+                                        {{ $blog->created_at ? $blog->created_at->format('H:i') : '' }}
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="text-align: center;">
+                                @if($blog->deleted_at)
+                                    <span class="status-badge status-deleted">
+                                        <i class="fas fa-trash"></i>
+                                        Supprimé
+                                    </span>
+                                @else
+                                    <span class="status-badge status-active">
+                                        <i class="fas fa-check-circle"></i>
+                                        Actif
+                                    </span>
+                                @endif
+                            </td>
+                            <td style="text-align: center;">
+                                <div class="action-buttons">
+                                    <a href="{{ route('admin.blogs.show', $blog) }}" 
+                                       class="action-btn primary" 
+                                       title="Voir détails">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ route('admin.blogs.edit', $blog) }}" 
+                                       class="action-btn warning" 
+                                       title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    @if(!$blog->deleted_at)
+                                    <button type="button" 
+                                            class="action-btn danger delete-blog" 
+                                            data-id="{{ $blog->id }}"
+                                            data-title="{{ $blog->title }}"
+                                            title="Supprimer">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
                         @empty
-                            <tr>
-                                <td colspan="7" class="text-center">Aucun blog trouvé</td>
-                            </tr>
+                        <tr>
+                            <td colspan="7">
+                                <div class="empty-state">
+                                    <div class="empty-icon">
+                                        <i class="fas fa-blog"></i>
+                                    </div>
+                                    <p class="empty-text">Aucun article trouvé</p>
+                                    <p class="empty-description">
+                                        @if(request()->anyFilled(['search', 'category', 'status']))
+                                            Aucun article ne correspond à vos critères de recherche.
+                                        @else
+                                            Commencez par créer votre premier article de blog.
+                                        @endif
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
 
-            @if($blogs->hasPages())
-                <div class="d-flex justify-content-center mt-4">
-                    {{ $blogs->links('vendor.pagination.bootstrap-4') }}
-                </div>
+            <!-- Pagination -->
+            @if($blogs instanceof \Illuminate\Pagination\LengthAwarePaginator && $blogs->hasPages())
+            <div class="pagination-wrapper">
+                {{ $blogs->appends(request()->except('page'))->links('vendor.pagination.bootstrap-4') }}
+            </div>
             @endif
         </div>
     </div>
 
-    <!-- Liste des catégories -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex justify-content-between align-items-center">
-            <h6 class="m-0 font-weight-bold text-primary">Catégories</h6>
-            <div class="d-flex gap-2">
+    <!-- Gestion des catégories -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title">
+                <i class="fas fa-tags"></i>
+                Catégories de blog
+            </h5>
+            <div style="display: flex; gap: 0.5rem;">
                 <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
-                    <i class="fas fa-plus"></i> Nouvelle catégorie
+                    <i class="fas fa-plus"></i>
+                    Nouvelle catégorie
                 </button>
             </div>
         </div>
         <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered" width="100%" cellspacing="0">
+            <div class="table-wrapper">
+                <table class="categories-table">
                     <thead>
                         <tr>
                             <th>Nom</th>
                             <th>Description</th>
-                            <th>Nombre d'articles</th>
-                            <th>Actions</th>
+                            <th style="text-align: center;">Articles</th>
+                            <th style="text-align: center;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($blog_categories as $category)
-                            <tr>
-                                <td>
-                                    <div class="font-weight-bold">{{ $category->name }}</div>
-                                    <small class="text-muted">{{ $category->slug }}</small>
-                                </td>
-                                <td>{{ Str::limit($category->description, 100) }}</td>
-                                <td>{{ $category->blogs_count }}</td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        <button type="button" class="btn btn-warning btn-sm edit-category" 
-                                                data-id="{{ $category->id }}"
-                                                data-name="{{ $category->name }}"
-                                                data-description="{{ $category->description }}"
-                                                title="Modifier">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-danger btn-sm delete-category" 
-                                                data-id="{{ $category->id }}"
-                                                title="Supprimer">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
+                        <tr>
+                            <td>
+                                <div class="category-name">{{ $category->name }}</div>
+                                <div class="category-slug">{{ $category->slug }}</div>
+                            </td>
+                            <td>
+                                <div class="category-description" title="{{ $category->description }}">
+                                    {{ Str::limit($category->description, 100) ?: 'Aucune description' }}
+                                </div>
+                            </td>
+                            <td style="text-align: center;">
+                                <span class="articles-count">{{ $category->blogs_count ?? 0 }}</span>
+                            </td>
+                            <td style="text-align: center;">
+                                <div class="action-buttons">
+                                    <button type="button" 
+                                            class="action-btn warning edit-category" 
+                                            data-id="{{ $category->id }}"
+                                            data-name="{{ $category->name }}"
+                                            data-description="{{ $category->description }}"
+                                            title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button type="button" 
+                                            class="action-btn danger delete-category" 
+                                            data-id="{{ $category->id }}"
+                                            data-name="{{ $category->name }}"
+                                            data-count="{{ $category->blogs_count ?? 0 }}"
+                                            title="Supprimer">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
                         @empty
-                            <tr>
-                                <td colspan="4" class="text-center">Aucune catégorie trouvée</td>
-                            </tr>
+                        <tr>
+                            <td colspan="4">
+                                <div class="empty-state" style="padding: 2rem 1rem;">
+                                    <div class="empty-icon" style="font-size: 2rem;">
+                                        <i class="fas fa-tags"></i>
+                                    </div>
+                                    <p class="empty-text">Aucune catégorie</p>
+                                    <p class="empty-description">Créez votre première catégorie de blog</p>
+                                </div>
+                            </td>
+                        </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
-
-            @if($blogs->hasPages())
-                <div class="d-flex justify-content-center mt-4">
-                    {{ $blogs->links('vendor.pagination.bootstrap-4') }}
-                </div>
-            @endif
         </div>
     </div>
 </div>
@@ -539,24 +1257,33 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Nouvelle catégorie</h5>
+                <h5 class="modal-title">
+                    <i class="fas fa-plus-circle"></i>
+                    Nouvelle catégorie
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form action="{{ route('admin.blog-categories.store') }}" method="POST">
                 @csrf
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="name" class="form-label">Nom</label>
+                        <label for="name" class="form-label" style="font-weight: 600; color: var(--gray-700);">Nom</label>
                         <input type="text" class="form-control" id="name" name="name" required>
                     </div>
                     <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
+                        <label for="description" class="form-label" style="font-weight: 600; color: var(--gray-700);">Description</label>
                         <textarea class="form-control" id="description" name="description" rows="3"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>
+                        Annuler
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>
+                        Enregistrer
+                    </button>
                 </div>
             </form>
         </div>
@@ -568,7 +1295,10 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Modifier la catégorie</h5>
+                <h5 class="modal-title">
+                    <i class="fas fa-edit"></i>
+                    Modifier la catégorie
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="editCategoryForm" method="POST">
@@ -576,19 +1306,107 @@
                 @method('PUT')
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="edit_name" class="form-label">Nom</label>
+                        <label for="edit_name" class="form-label" style="font-weight: 600; color: var(--gray-700);">Nom</label>
                         <input type="text" class="form-control" id="edit_name" name="name" required>
                     </div>
                     <div class="mb-3">
-                        <label for="edit_description" class="form-label">Description</label>
+                        <label for="edit_description" class="form-label" style="font-weight: 600; color: var(--gray-700);">Description</label>
                         <textarea class="form-control" id="edit_description" name="description" rows="3"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>
+                        Annuler
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>
+                        Enregistrer
+                    </button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmation Suppression Blog -->
+<div class="modal fade" id="deleteBlogModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);">
+                <h5 class="modal-title" style="color: white;">
+                    <i class="fas fa-trash-alt"></i>
+                    Confirmer la suppression
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: brightness(0) invert(1);"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div style="font-size: 3rem; color: var(--warning); margin-bottom: 1rem;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h6 style="font-weight: 600; color: var(--gray-900); margin-bottom: 1rem;">
+                    Supprimer l'article <span id="blogTitle" style="color: var(--danger);"></span> ?
+                </h6>
+                <p style="color: var(--gray-600); font-size: 0.875rem; margin-bottom: 1.5rem;">
+                    Cette action est <strong style="color: var(--danger);">irréversible</strong>. 
+                    L'article sera définitivement supprimé de la plateforme.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>
+                    Annuler
+                </button>
+                <form id="deleteBlogForm" method="POST" style="display: inline;">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>
+                        Supprimer définitivement
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmation Suppression Catégorie -->
+<div class="modal fade" id="deleteCategoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);">
+                <h5 class="modal-title" style="color: white;">
+                    <i class="fas fa-trash-alt"></i>
+                    Confirmer la suppression
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: brightness(0) invert(1);"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div style="font-size: 3rem; color: var(--warning); margin-bottom: 1rem;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h6 style="font-weight: 600; color: var(--gray-900); margin-bottom: 1rem;">
+                    Supprimer la catégorie <span id="categoryName" style="color: var(--danger);"></span> ?
+                </h6>
+                <p style="color: var(--gray-600); font-size: 0.875rem; margin-bottom: 1.5rem;">
+                    Cette action est <strong style="color: var(--danger);">irréversible</strong>.
+                    <span id="categoryArticlesCount"></span>
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>
+                    Annuler
+                </button>
+                <form id="deleteCategoryForm" method="POST" style="display: inline;">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>
+                        Supprimer définitivement
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
@@ -597,38 +1415,61 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Gestion de la suppression des blogs
-    const deleteBlogButtons = document.querySelectorAll('.delete-blog');
-    deleteBlogButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const blogId = this.dataset.id;
-            if (confirm('Êtes-vous sûr de vouloir supprimer ce blog ?')) {
-                fetch(`/Administrateur/blogs/${blogId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        this.closest('tr').remove();
-                        alert('Blog supprimé avec succès');
-                    } else {
-                        alert('Erreur lors de la suppression');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Erreur lors de la suppression');
-                });
+    // CSRF Token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+    // ===========================================
+    // RECHERCHE - Auto-submit on Enter
+    // ===========================================
+    const searchInput = document.getElementById('blogSearch');
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('filtersForm').submit();
             }
+        });
+    }
+
+    // Remove onchange from selects
+    document.querySelectorAll('select[name="category"], select[name="status"]').forEach(select => {
+        select.removeAttribute('onchange');
+    });
+
+    // ===========================================
+    // SUPPRESSION BLOG - Confirmation modale
+    // ===========================================
+    const deleteBlogButtons = document.querySelectorAll('.delete-blog');
+    const deleteBlogModal = new bootstrap.Modal(document.getElementById('deleteBlogModal'));
+    const blogTitleSpan = document.getElementById('blogTitle');
+    const deleteBlogForm = document.getElementById('deleteBlogForm');
+
+    deleteBlogButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const blogId = this.dataset.id;
+            const blogTitle = this.dataset.title;
+            
+            blogTitleSpan.textContent = `"${blogTitle}"`;
+            deleteBlogForm.action = `/Administrateur/blogs/${blogId}`;
+            
+            deleteBlogModal.show();
         });
     });
 
-    // Gestion de l'édition des catégories
+    // Réinitialisation du modal de suppression blog
+    document.getElementById('deleteBlogModal').addEventListener('hidden.bs.modal', function() {
+        blogTitleSpan.textContent = '';
+        deleteBlogForm.action = '#';
+    });
+
+    // ===========================================
+    // ÉDITION CATÉGORIE
+    // ===========================================
     const editCategoryButtons = document.querySelectorAll('.edit-category');
+    const editCategoryModal = new bootstrap.Modal(document.getElementById('editCategoryModal'));
+
     editCategoryButtons.forEach(button => {
         button.addEventListener('click', function() {
             const categoryId = this.dataset.id;
@@ -636,42 +1477,65 @@ document.addEventListener('DOMContentLoaded', function() {
             const description = this.dataset.description;
 
             document.getElementById('edit_name').value = name;
-            document.getElementById('edit_description').value = description;
+            document.getElementById('edit_description').value = description || '';
             document.getElementById('editCategoryForm').action = `/Administrateur/blog-categories/${categoryId}`;
 
-            new bootstrap.Modal(document.getElementById('editCategoryModal')).show();
+            editCategoryModal.show();
         });
     });
 
-    // Gestion de la suppression des catégories
+    // ===========================================
+    // SUPPRESSION CATÉGORIE - Confirmation modale
+    // ===========================================
     const deleteCategoryButtons = document.querySelectorAll('.delete-category');
+    const deleteCategoryModal = new bootstrap.Modal(document.getElementById('deleteCategoryModal'));
+    const categoryNameSpan = document.getElementById('categoryName');
+    const categoryArticlesSpan = document.getElementById('categoryArticlesCount');
+    const deleteCategoryForm = document.getElementById('deleteCategoryForm');
+
     deleteCategoryButtons.forEach(button => {
         button.addEventListener('click', function() {
             const categoryId = this.dataset.id;
-            if (confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?')) {
-                fetch(`/Administrateur/blog-categories/${categoryId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        this.closest('tr').remove();
-                        alert('Catégorie supprimée avec succès');
-                    } else {
-                        alert('Erreur lors de la suppression');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Erreur lors de la suppression');
-                });
+            const categoryName = this.dataset.name;
+            const articlesCount = parseInt(this.dataset.count || 0);
+
+            categoryNameSpan.textContent = `"${categoryName}"`;
+            
+            if (articlesCount > 0) {
+                categoryArticlesSpan.innerHTML = `${articlesCount} article(s) sont associés à cette catégorie et seront également affectés.`;
+            } else {
+                categoryArticlesSpan.innerHTML = 'Aucun article n\'est associé à cette catégorie.';
             }
+            
+            deleteCategoryForm.action = `/Administrateur/blog-categories/${categoryId}`;
+            
+            deleteCategoryModal.show();
         });
     });
+
+    // Réinitialisation du modal de suppression catégorie
+    document.getElementById('deleteCategoryModal').addEventListener('hidden.bs.modal', function() {
+        categoryNameSpan.textContent = '';
+        categoryArticlesSpan.innerHTML = '';
+        deleteCategoryForm.action = '#';
+    });
+
+    // ===========================================
+    // AUTO-FERMETURE DES ALERTES
+    // ===========================================
+    setTimeout(() => {
+        document.querySelectorAll('.alert').forEach(alert => {
+            if (!alert.classList.contains('alert-permanent')) {
+                alert.style.transition = 'opacity 0.3s ease';
+                alert.style.opacity = '0';
+                setTimeout(() => {
+                    if (alert.parentNode) {
+                        alert.remove();
+                    }
+                }, 300);
+            }
+        });
+    }, 4000);
 });
 </script>
 @endpush

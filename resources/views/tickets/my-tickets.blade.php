@@ -10,12 +10,12 @@
                 <div class="card border-0 bg-light shadow-sm">
                     <div class="card-body">
                         <h4 class="mb-4">Mes billets</h4>
-                        
+
                         @if($tickets->isEmpty())
                             <div class="text-center py-5">
                                 <i class="fas fa-ticket-alt fa-3x text-muted mb-3"></i>
                                 <h5>Vous n'avez pas encore de billets</h5>
-                                <p class="text-muted">Découvrez nos <a href="{{ route('events.index') }}" class="text-primary">événements</a> et réservez vos premiers billets.</p>
+                                <p class="text-muted">Découvrez nos <a href="{{ url('/direct-events') }}" class="text-primary">événements</a> et réservez vos premiers billets.</p>
                             </div>
                         @else
                             <div class="table-responsive">
@@ -36,12 +36,12 @@
                                                 <td>
                                                     <div class="d-flex align-items-center">
                                                         @if($ticket->event->image)
-                                                            <img src="{{ asset('storage/' . $ticket->event->image) }}" 
-                                                                alt="{{ $ticket->event->title }}" 
+                                                            <img src="{{ asset('storage/' . $ticket->event->image) }}"
+                                                                alt="{{ $ticket->event->title }}"
                                                                 class="rounded me-3"
                                                                 style="width: 48px; height: 48px; object-fit: cover;">
                                                         @else
-                                                            <div class="rounded bg-secondary d-flex align-items-center justify-content-center me-3" 
+                                                            <div class="rounded bg-secondary d-flex align-items-center justify-content-center me-3"
                                                                 style="width: 48px; height: 48px;">
                                                                 <i class="bi bi-calendar-event text-white"></i>
                                                             </div>
@@ -66,12 +66,12 @@
                                                 </td>
                                                 <td>
                                                     <div class="btn-group">
-                                                        <a href="{{ route('events.show', $ticket->event) }}" 
+                                                        <a href="{{ route('events.show', $ticket->event) }}"
                                                            class="btn btn-sm btn-outline-primary">
                                                             Voir l'événement
                                                         </a>
                                                         @if($ticket->order && $ticket->order->status === 'pending')
-                                                            <a href="{{ route('orders.pay', $ticket->order) }}" 
+                                                            <a href="{{ route('orders.pay', $ticket->order) }}"
                                                                class="btn btn-sm btn-primary">
                                                                 Payer
                                                             </a>
