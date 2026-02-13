@@ -605,8 +605,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Routes de paiement
 Route::middleware(['auth', 'verified'])->group(function () {
     // Afficher le formulaire de paiement
-    Route::get('/paiement/{order}/process', [PaymentController::class, 'process'])
-        ->name('payments.process');
+    // Route payments.process déjà définie ligne 780 - doublon supprimé
     
     // Historique
     Route::get('/payments/history', [PaymentController::class, 'history'])
