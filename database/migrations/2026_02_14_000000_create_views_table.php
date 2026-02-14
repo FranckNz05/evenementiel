@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -13,7 +14,7 @@ return new class extends Migration
     {
         Schema::create('views', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('user_id')->nullable(); // Foreign key vers users (sans contrainte pour éviter les erreurs)
             $table->unsignedBigInteger('viewable_id')->nullable(); // ID de l'objet visualisé (polymorphique)
             $table->string('viewable_type')->nullable(); // Type de l'objet (Event, Blog, Organizer, etc.)
             $table->string('viewed_type')->nullable(); // Type alternatif utilisé par certaines relations (Event, Blog)
@@ -25,6 +26,16 @@ return new class extends Migration
             $table->index(['viewable_id', 'viewed_type']);
             $table->index('user_id');
         });
+        
+        // Ajouter la contrainte de clé étrangère seulement si la table users existe
+        // Utiliser une requête SQL directe pour éviter les erreurs de schéma
+        try {
+            if (Schema::hasTable('users')) {
+                DB::statement('ALTER TABLE views ADD CONSTRAINT views_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE');
+            }
+        } catch (\Exception $e) {
+            // Ignorer l'erreur si la contrainte ne peut pas être ajoutée
+        }
     }
 
     /**
