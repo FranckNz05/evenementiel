@@ -21,7 +21,8 @@ try {
         \$maxBatch = DB::table('migrations')->max('batch') ?? 0;
         \$newBatch = \$maxBatch + 1;
         
-        // Insérer la migration
+        // Insérer la migration avec un ID auto-incrémenté
+        // Laravel gère automatiquement l'ID, donc on ne le spécifie pas
         DB::table('migrations')->insert([
             'migration' => '2026_02_14_000000_create_views_table',
             'batch' => \$newBatch
@@ -33,7 +34,6 @@ try {
     }
 } catch (Exception \$e) {
     echo 'Erreur: ' . \$e->getMessage() . PHP_EOL;
-    echo 'Stack trace: ' . \$e->getTraceAsString() . PHP_EOL;
 }
 "
 

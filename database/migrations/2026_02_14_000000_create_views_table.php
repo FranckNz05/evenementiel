@@ -12,6 +12,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Vérifier si la table existe déjà
+        if (Schema::hasTable('views')) {
+            return; // La table existe déjà, ne rien faire
+        }
+        
         Schema::create('views', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id')->nullable(); // Foreign key vers users (sans contrainte pour éviter les erreurs)
