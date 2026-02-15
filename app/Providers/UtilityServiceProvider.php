@@ -55,6 +55,9 @@ class UtilityServiceProvider extends ServiceProvider
         
         // Ajoute les helpers généraux
         require_once app_path('Helpers/helpers.php');
+        
+        // Ajoute les helpers de settings
+        require_once app_path('Helpers/settings_helpers.php');
     }
 
     protected function loadGlobalSettings()
