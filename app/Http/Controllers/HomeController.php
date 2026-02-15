@@ -36,7 +36,10 @@ class HomeController extends Controller
             ->limit(10)
             ->get();
 
-        return view('home', compact('popularEvents', 'organizers'));
+        // Catégories pour les filtres
+        $categories = Category::orderBy('name')->get();
+
+        return view('home', compact('popularEvents', 'organizers', 'categories'));
     }
 
     public function show(Event $event)
