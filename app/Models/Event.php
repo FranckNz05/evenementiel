@@ -77,6 +77,11 @@ class Event extends Model
         return $this->morphMany(Comment::class, 'commentable');
     }
 
+    public function shares()
+    {
+        return $this->hasMany(Share::class, 'event_id');
+    }
+
     public function getRouteKeyName()
     {
         return 'slug';
