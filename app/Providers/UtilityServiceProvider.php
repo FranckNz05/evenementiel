@@ -52,6 +52,9 @@ class UtilityServiceProvider extends ServiceProvider
 
         // Ajoute les helpers de traduction
         require_once app_path('Helpers/translation_helpers.php');
+        
+        // Ajoute les helpers généraux
+        require_once app_path('Helpers/helpers.php');
     }
 
     protected function loadGlobalSettings()
