@@ -39,7 +39,22 @@ class HomeController extends Controller
         // Catégories pour les filtres
         $categories = Category::orderBy('name')->get();
 
-        return view('home', compact('popularEvents', 'organizers', 'categories'));
+        // Événements recommandés (pour les utilisateurs connectés)
+        $recommendedEvents = collect();
+        if (auth()->check()) {
+            // Logique de recommandation basée sur les préférences de l'utilisateur
+            // Pour l'instant, on utilise les événements populaires comme recommandations
+            $recommendedEvents = Event::withCount('views')
+                ->with(['category', 'organizer'])
+                ->where('start_date', '>=', now())
+                ->where('is_published', true)
+                ->where('is_approved', true)
+                ->orderByDesc('views_count')
+                ->limit(8)
+                ->get();
+        }
+
+        return view('home', compact('popularEvents', 'organizers', 'categories', 'recommendedEvents'));
     }
 
     public function show(Event $event)
