@@ -1,10 +1,17 @@
 # Configuration Nginx pour mokilievent.com avec HTTPS
 
+# IP réelle des visiteurs (si vous utilisez Cloudflare en DNS only, ces lignes ne sont pas nécessaires)
+# real_ip_header CF-Connecting-IP;
+# set_real_ip_from 173.245.48.0/20;
+# ... (autres IPs Cloudflare si nécessaire)
+
 # Redirection HTTP vers HTTPS
 server {
     listen 80;
     listen [::]:80;
     server_name mokilievent.com www.mokilievent.com;
+    
+    # Redirection vers HTTPS
     return 301 https://$server_name$request_uri;
 }
 
